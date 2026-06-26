@@ -5,7 +5,7 @@ export class SkillSelectScene {
     constructor(g, d = {}) { this.g = g; this.w = 1920; this.h = 1080; this.im = {}; this.ok = false; this.md = d.mode || '本地对战'; this.role = d.role || ''; this.gameMode = d.gameMode || '一局定胜负'; this.pwins = d.wins || [0,0]; this.pround = d.round || 1; this.ph = 1; this.p1 = d.p1 || []; this.p2 = d.p2 || []; this.mx = 3; this.tr = false; this.hv = null; this._t = null; this.waiting = false; this._pressed = null; this._tip = null; this._hoverKey = null; this._hoverTime = 0; }
 
     async init() {
-        const L = (k, u) => new Promise(r => { const i = new Image(); const t = setTimeout(() => { console.warn(`备战加载超时: ${k}`); this.im[k] = i; r(); }, 15000); i.onload = () => { clearTimeout(t); this.im[k] = i; r(); }; i.onerror = () => { clearTimeout(t); console.error(`备战加载失败: ${k}`); r(); }; i.src = u; });
+        const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => { this.im[k] = i; r(); }; i.src = u; });
         const B = '游戏资源/图像';
         await Promise.all([
             L('bg', `${B}/场景/准备界面的背景1.jpg`),
@@ -111,10 +111,10 @@ export class SkillSelectScene {
     }
 
     render(ctx) {
-        ctx.fillStyle='#000';ctx.fillRect(0,0,this.w,this.h);
+        ctx.fillStyle='#0a0a15';ctx.fillRect(0,0,this.w,this.h);
         if(!this.ok){this.renderLoading(ctx);return;}
-        // 背景图未加载完→继续显示加载
-        if(!this.im['bg']||this.im['bg'].naturalWidth===0){this.renderLoading(ctx);return;}
+        // 背景图
+        const bgImg = this.im['bg'];
 
         // 背景
         const bg=this.im['bg'];if(bg&&bg.naturalWidth>0)ctx.drawImage(bg,this.bg.x,this.bg.y,this.bg.w,this.bg.h);
