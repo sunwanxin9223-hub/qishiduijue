@@ -23,7 +23,7 @@ export class BattleScene {
         this._gameTime = 0;
         this._lastGoodFrame = {};
         this.loadingProgress = 0;
-        this._vicLoadIdx = 1; // 结算帧后台懒加载索引
+        this._vicLoadIdx = 31; // 1-30已预载，从31开始后台补
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -393,6 +393,17 @@ export class BattleScene {
                 }
             }
             return tasks;
+        }));
+        // 结算动画前30帧（与场景帧并行，确保结算不空白）
+        const vicPad = n => String(n).padStart(5,'0');
+        await Promise.all([...Array(30)].map((_,i) => {
+            const n = i+1, ck = 'vicFinal'+n;
+            return new Promise(r => {
+                const img = new Image();
+                img.onload = () => { this.frameCache.set(ck, img); r(); };
+                img.onerror = () => r();
+                img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.png`;
+            });
         }));
         this.loadingProgress = 70;
         // 预加载当前对局需要的音效和配音
@@ -1462,17 +1473,16 @@ export class BattleScene {
         this._loadFrame('sz', ((fi%this.total)+1));
         this._loadFrame('fz', ((fi%this.total)+1));
         this._loadFrame('idle', ((fi%this.total)+1));
-        // 后台懒加载结算动画帧（每帧3张，不占加载界面时间）
+        // 后台补结算动画剩余帧31-121
         if(this._vicLoadIdx <= 121){
-            const pad5 = n => String(n).padStart(5,'0');
-            for(let i=0;i<3 && this._vicLoadIdx<=121;i++,this._vicLoadIdx++){
-                const n = this._vicLoadIdx;
-                const ck = 'vicFinal'+n;
+            const vPad = n => String(n).padStart(5,'0');
+            for(let i=0;i<5 && this._vicLoadIdx<=121;i++,this._vicLoadIdx++){
+                const n = this._vicLoadIdx, ck = 'vicFinal'+n;
                 if(!this.frameCache.has(ck)){
                     const img = new Image();
                     img.onload = () => this.frameCache.set(ck, img);
                     img.onerror = () => {};
-                    img.src = `${this.victoryFrameDir}/frame_${pad5(n)}.png`;
+                    img.src = `${this.victoryFrameDir}/frame_${vPad(n)}.png`;
                 }
             }
         }
