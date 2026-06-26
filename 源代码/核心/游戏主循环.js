@@ -132,14 +132,26 @@ export class Game {
     /** 响应式缩放 — 手机半分辨率适配可视区域，桌面全分辨率 */
     resize() {
         const isMobile = window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024);
-        // 手机端用 visualViewport 获取真正可视区域（排除地址栏/底部栏）
+        // 手机端用 visualViewport 获取真正可视区域（排除地址栏/底部栏/键盘）
         const vv = window.visualViewport;
-        const pw = isMobile && vv ? vv.width : this.canvas.parentElement.clientWidth;
-        const ph = isMobile && vv ? vv.height : this.canvas.parentElement.clientHeight;
+        const pw = isMobile && vv ? vv.width : window.innerWidth;
+        const ph = isMobile && vv ? vv.height : window.innerHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        // 保持比例填充可视区域，不超出边界
         const scale = Math.min(pw / iw, ph / ih);
+
+        // 手机端：强制容器和canvas精确适配可视viewport
+        const container = this.canvas.parentElement;
+        if (isMobile && vv) {
+            container.style.position = 'fixed';
+            container.style.left = '0px';
+            container.style.top = '0px';
+            container.style.width = vv.width + 'px';
+            container.style.height = vv.height + 'px';
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+        }
 
         this.canvas.width = iw;
         this.canvas.height = ih;
