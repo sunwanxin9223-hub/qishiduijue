@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>调试</title></head>
+<body>
+<div id="log" style="color:#0f0;background:#000;padding:20px;font-family:monospace;font-size:14px;white-space:pre-wrap;height:100vh;"></div>
+<script>
+window.addEventListener('error', function(e) {
+    document.getElementById('log').textContent += '\nERROR: ' + e.message + '\n  ' + (e.filename||'') + ':' + (e.lineno||'') + '\n';
+});
+window.addEventListener('unhandledrejection', function(e) {
+    document.getElementById('log').textContent += '\nPROMISE ERR: ' + (e.reason && e.reason.message || e.reason) + '\n';
+});
+</script>
+<script type="module">
+document.getElementById('log').textContent = '开始加载...\n';
+try {
+    const mod = await import('./源代码/main.js');
+    document.getElementById('log').textContent += 'main.js 导入成功!\n';
+} catch(e) {
+    document.getElementById('log').textContent += '导入失败: ' + e.message + '\n' + e.stack + '\n';
+}
+</script>
+</body></html>
