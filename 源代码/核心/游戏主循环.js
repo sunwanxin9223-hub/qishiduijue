@@ -132,7 +132,7 @@ export class Game {
         this._mobileHalf = isMobile;
         const factor = isMobile ? 0.5 : 1;
         const iw = Math.round(1920 * factor), ih = Math.round(1080 * factor);
-        const scale = Math.max(pw / iw, ph / ih);
+        const scale = Math.min(pw / iw, ph / ih);
 
         this.canvas.width = iw;
         this.canvas.height = ih;
