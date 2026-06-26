@@ -7,7 +7,8 @@ export class SkillSelectScene {
     async init() {
         const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => { this.im[k] = i; r(); }; i.src = u; });
         const B = '游戏资源/图像';
-        await Promise.all([
+        // 后台异步加载图片，不阻塞界面显示
+        Promise.all([
             L('bg', `${B}/场景/准备界面的背景1.jpg`),
             L('ch', `${B}/人物/主角_透明.png`),
             L('rdy',`${B}/UI/准备好了UI1_透明.png`),
@@ -17,7 +18,7 @@ export class SkillSelectScene {
             L('激光1',    `${B}/UI/激光1_透明.png`),   L('巨剑术1',  `${B}/UI/巨剑术1_透明.png`),
             L('神速1',    `${B}/UI/神速1_透明.png`),   L('冰冻1',    `${B}/UI/冰冻1_透明.png`),
         ]);
-        this.ok = true;
+        this.ok = true; // 立即显示界面，图片后台加载
 
         // 渲染层
         this.bg = { x: 0, y: 0, w: 1920, h: 1080 };
