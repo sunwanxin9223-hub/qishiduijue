@@ -2251,10 +2251,10 @@ export class BattleScene {
         const allAudio = [...neededSfx].map(fn => `${sfxDir}/${fn}.mp3`);
         const neededVoice = new Set([...this.skills1, ...this.skills2]);
         for (const fn of neededVoice) allAudio.push(`${voiceDir}/${fn}.mp3`);
-        // 用 fetch 预缓存到浏览器（比 new Audio 更轻量）
+        // 用 fetch 预缓存到浏览器 HTTP 缓存
         for (const url of allAudio) {
-            fetch(url).catch(() => {});
-            await new Promise(r => setTimeout(r, 50)); // 50ms间隔，不抢带宽
+            fetch(url).then(r => r.blob()).catch(() => {});
+            await new Promise(r => setTimeout(r, 50));
         }
         // 结算帧剩余（11-121）也在后台补齐
         const vicPad = n => String(n).padStart(5,'0');
