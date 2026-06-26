@@ -81,7 +81,7 @@ export class RoomScene {
     createRoom() { this.isHost = true; this.roomCode = String(Math.floor(1000 + Math.random() * 9000)); this.showAnim = true; this.currentFrame = 0; setTimeout(() => this.g.switchScene('技能选择', { mode: '好友对战', role: '房主' }), 3000); }
     joinRoom() { this.isJoining = true; this.showAnim = true; this.currentFrame = 0; setTimeout(() => this.g.switchScene('技能选择', { mode: '好友对战', role: '好友' }), 3000); }
 
-    p(e) { const r = this.g.canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (1920 / r.width), y: (e.clientY - r.top) * (1080 / r.height) }; }
+    p(e) { const r = this.g.canvas.getBoundingClientRect(); if(window._gameRotated){ return { x: (e.clientY - r.top) * (1920 / r.width), y: (r.right - e.clientX) * (1080 / r.height) }; } return { x: (e.clientX - r.left) * (1920 / r.width), y: (e.clientY - r.top) * (1080 / r.height) }; }
 
     update(dt) {
         if (this.showAnim) {

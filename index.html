@@ -17,17 +17,39 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        /* 移动端满屏 */
-        @media (max-width: 1024px) {
-            #game-container { position: fixed; inset: 0; }
-            canvas { object-fit: contain; max-width: 100vw; max-height: 100vh; }
-        }
         #game-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
     </style>
 </head>
 <body>
     <div id="game-container"><canvas id="game-canvas"></canvas></div>
+    <script>
+        // 强制横屏：手机竖屏时旋转整个游戏
+        (function(){
+            window._gameRotated = false;
+            function lock() {
+                var isPortrait = window.innerHeight > window.innerWidth && window.innerWidth < 900;
+                var c = document.getElementById('game-container');
+                window._gameRotated = isPortrait;
+                if (isPortrait) {
+                    c.style.position = 'absolute';
+                    c.style.top = '0';
+                    c.style.left = '100vw';
+                    c.style.width = '100vw';
+                    c.style.height = '100vh';
+                    c.style.transform = 'rotate(90deg)';
+                    c.style.transformOrigin = 'top left';
+                } else {
+                    c.style.position = c.style.top = c.style.left = '';
+                    c.style.width = c.style.height = '';
+                    c.style.transform = c.style.transformOrigin = '';
+                }
+            }
+            window.addEventListener('resize', lock);
+            window.addEventListener('orientationchange', function(){ setTimeout(lock, 100); });
+            lock();
+        })();
+    </script>
     <script type="module" src="源代码/main.js?v=291"></script>
 </body>
 </html>
