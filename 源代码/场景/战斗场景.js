@@ -25,8 +25,9 @@ export class BattleScene {
         this.loadingProgress = 0;
         this._lastProgressTime = Date.now();
         this._lastRealPct = 0;
-        this.speedMult = 1/3; // 默认1/3速防卡
-        this._speedTutorial = false; // 首次弹窗
+        this.speedMult = 1/3;
+        this._speedTutorial = false;
+        this._isMobile = false; // 手机端检测
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -440,6 +441,19 @@ export class BattleScene {
         await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 120000))]);
         this.loadingProgress = 80;
         this.ok = true;
+        // 手机端检测 + 加载普攻图标
+        this._isMobile = window._gameRotated || ('ontouchstart' in window && window.innerWidth < 1024);
+        if(this._isMobile){
+            const L = (k, u) => new Promise(r => {
+                const i = new Image(); i.onload = () => { this.im[k] = i; r(); };
+                i.onerror = () => r(); i.src = u;
+            });
+            await L('普攻','游戏资源/图像/UI/普攻_透明.png');
+            // 普攻按钮（JSON坐标系: center -790.28,-395.84, size 96.87°96.87）
+            this.atkBtn = { x:-790.28+960-48.435, y:-395.84+540-48.435, w:96.87, h:96.87 };
+            // 结束回合按钮（普攻下方20px）
+            this.endBtn = { x:this.atkBtn.x, y:this.atkBtn.y+96.87+20, w:96.87, h:40 };
+        }
         // 首次进入提示
         if (!localStorage.getItem('qs_speed_tip')) {
             this._speedTutorial = true;
@@ -558,6 +572,16 @@ export class BattleScene {
                 return;
             }
             if(this.moving||this.moveLoading)return;
+            // 手机端：普攻/结束回合按钮
+            if(this._isMobile){
+                const ab=this.atkBtn, eb=this.endBtn;
+                if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){
+                    this.useSkill(this.turn, 4); return;
+                }
+                if(x>=eb.x&&x<=eb.x+eb.w&&y>=eb.y&&y<=eb.y+eb.h){
+                    if(this.skillUsed && this.moved) this.endTurn(); return;
+                }
+            }
             const pi=this.turn;
             for(let si=0;si<4;si++){
                 const h=this.skHit[pi][si];
@@ -603,6 +627,12 @@ export class BattleScene {
                 return;
             }
             if(this.moving||this.moveLoading)return;
+            // 手机端按钮按下反馈
+            if(this._isMobile){
+                const ab=this.atkBtn, eb=this.endBtn;
+                if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){this._pressed='atk';return;}
+                if(x>=eb.x&&x<=eb.x+eb.w&&y>=eb.y&&y<=eb.y+eb.h){this._pressed='end';return;}
+            }
             // 技能图标按下（交互框）
             if(!this.skillUsed){const pi=this.turn;
                 for(let si=0;si<4;si++){const h=this.skHit[pi][si];
@@ -1709,6 +1739,22 @@ export class BattleScene {
             ctx.beginPath();ctx.moveTo(arrowX, sb.y+sb.h+4);ctx.lineTo(arrowX, arrowY);
             ctx.moveTo(arrowX-6, arrowY-8);ctx.lineTo(arrowX, arrowY);ctx.lineTo(arrowX+6, arrowY-8);
             ctx.stroke();
+        }
+
+        // 手机端专用：普攻按钮 + 结束回合按钮
+        if(this._isMobile && !this.paused && !this.moving && !this.moveLoading && !this.moved && !this.victoryAnim && this.players && !this.players[this.turn].dead && !this.players[this.turn].animOverride){
+            const ab = this.atkBtn, eb = this.endBtn;
+            // 普攻图标
+            const icon = this.im['普攻'];
+            if(icon){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
+            // 普攻按下反馈
+            if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
+            // 结束回合按钮
+            ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h);
+            ctx.strokeStyle='rgba(224,192,112,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(eb.x,eb.y,eb.w,eb.h);
+            if(this._pressed==='end'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h); }
+            ctx.fillStyle='#e0c070'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+            ctx.fillText('结束', eb.x+eb.w/2, eb.y+eb.h/2+5);
         }
 
         // 可移动光圈光柱（缓存到离屏canvas，避免大量fillRect卡帧）
