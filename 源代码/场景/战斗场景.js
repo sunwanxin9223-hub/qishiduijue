@@ -619,9 +619,9 @@ export class BattleScene {
         cv.addEventListener('mouseup',this._mu);
         cv.addEventListener('mousedown',this._md);
         // 移动端触摸支持（不preventDefault，保留click事件）
-        this._ts = e => { this._md(e.touches[0]); };
+        this._ts = e => { e.preventDefault(); this._md(e.touches[0]); };
         this._tm = e => { e.preventDefault(); this._mm(e.touches[0]); };
-        this._te = e => { this._mu(); this._cl(e.changedTouches[0]); };
+        this._te = e => { e.preventDefault(); this._mu(); this._cl(e.changedTouches[0]); };
         cv.addEventListener('touchstart', this._ts, {passive: false});
         cv.addEventListener('touchmove', this._tm, {passive: false});
         cv.addEventListener('touchend', this._te);
