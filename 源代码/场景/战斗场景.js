@@ -583,11 +583,15 @@ export class BattleScene {
                 return;
             }
             if(this.moving||this.moveLoading)return;
-            // 手机端：普攻/结束回合
+            // 手机端：普攻（技能使用后仍可普攻，强化后也可普攻）
             const pi = this.turn;
-            if(this._isMobile && !this.skillUsed){
+            if(this._isMobile){
                 const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){
+                    if(this.skillUsed && !this.players[pi]._buffedTurn){
+                        this.hints.push({text:'技能已用，无法再攻击',timer:0,color:'255,100,100'});
+                        return;
+                    }
                     const enemy=this.players[1-pi];
                     if(this._graphDist(this.players[pi].pos, enemy.pos) > 1){
                         this.hints.push({text:'敌人太远，无法攻击',timer:0,color:'255,100,100'});
@@ -648,9 +652,9 @@ export class BattleScene {
                 return;
             }
             if(this.moving||this.moveLoading)return;
-            // 手机端按钮按下反馈
+            // 手机端按钮按下反馈（强化后也可普攻）
             const mdPi = this.turn;
-            if(this._isMobile && !this.skillUsed){
+            if(this._isMobile){
                 const ab = mdPi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){this._pressed='atk';return;}
             }
@@ -1768,14 +1772,14 @@ export class BattleScene {
             const pi = this.turn, p = this.players[pi];
             const p1 = this.players[0], p2 = this.players[1];
             const icon = this.im['普攻'];
-            const canAtk = !this.skillUsed && !this.moving && !this.moveLoading;
-            // 普攻按钮 P1（左）
-            if(icon && canAtk && !p1.dead && !p1.animOverride){
+            const showAtk = !this.moving && !this.moveLoading;
+            // 普攻按钮 P1（左）始终显示，能否攻击由点击逻辑判断
+            if(icon && showAtk && !p1.dead && !p1.animOverride){
                 this._draw(ctx, icon, this.atkBtn1.x, this.atkBtn1.y, this.atkBtn1.w, this.atkBtn1.h);
                 if(pi===0 && this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(this.atkBtn1.x,this.atkBtn1.y,this.atkBtn1.w,this.atkBtn1.h); }
             }
-            // 普攻按钮 P2（右）
-            if(icon && canAtk && !p2.dead && !p2.animOverride){
+            // 普攻按钮 P2（右）始终显示
+            if(icon && showAtk && !p2.dead && !p2.animOverride){
                 this._draw(ctx, icon, this.atkBtn2.x, this.atkBtn2.y, this.atkBtn2.w, this.atkBtn2.h);
                 if(pi===1 && this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(this.atkBtn2.x,this.atkBtn2.y,this.atkBtn2.w,this.atkBtn2.h); }
             }
