@@ -379,7 +379,7 @@ export class BattleScene {
         // 场景动画前10帧
         for (const k of ['bg','sz','fz','idle']) {
             const dir = this.animPaths[k];
-            for (let n = 2; n <= 10; n++) {
+            for (let n = 2; n <= 30; n++) {
                 const ck = k + n;
                 if (!this.frameCache.has(ck)) {
                     tasks.push(new Promise(r => {
@@ -394,7 +394,7 @@ export class BattleScene {
             }
         }
         // 结算动画前10帧
-        for (let n = 1; n <= 10; n++) {
+        for (let n = 1; n <= 60; n++) {
             const ck = 'vicFinal'+n;
             tasks.push(new Promise(r => {
                 let done = false;
@@ -2336,7 +2336,7 @@ export class BattleScene {
         ]);
         // 结算帧剩余 11-121
         const vicPad = n => String(n).padStart(5,'0');
-        for (let n = 11; n <= 121; n++) {
+        for (let n = 61; n <= 121; n++) {
             const ck = 'vicFinal'+n;
             if(!this.frameCache.has(ck)){
                 const img = new Image();
