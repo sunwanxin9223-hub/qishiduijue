@@ -1676,6 +1676,12 @@ export class BattleScene {
     render(ctx){
         if(!this.players||!Array.isArray(this.players)){this.renderLoading(ctx);return;}
         if(!this.ok){this.renderLoading(ctx);return;}
+        // 关键帧未加载→继续显示加载界面
+        if(!this._readyFrames){this._readyFrames=0;}
+        if(this._readyFrames<5){
+            if(this.frameCache.has('bg1')&&this.frameCache.get('bg1').naturalWidth>0) this._readyFrames++;
+            else {this.renderLoading(ctx);return;}
+        }
         ctx.fillStyle='#000';ctx.fillRect(0,0,this.w,this.h);
 
         const fn=this.cf();
