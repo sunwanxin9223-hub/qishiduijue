@@ -124,24 +124,20 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 手机端分辨率减半省GPU */
+    /** 响应式缩放 */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth, ph = parent.clientHeight;
-        const isMobile = (pw < 1024 && ph < 1024) || ('ontouchstart' in window);
-        this._mobileHalved = isMobile;
-        const iw = isMobile ? 960 : 1920;
-        const ih = isMobile ? 540 : 1080;
-        const scale = Math.max(pw / iw, ph / ih);
-        const displayW = Math.floor(iw * scale);
-        const displayH = Math.floor(ih * scale);
+        const scale = Math.max(pw / 1920, ph / 1080);
+        const displayW = Math.floor(1920 * scale);
+        const displayH = Math.floor(1080 * scale);
 
-        this.canvas.width = iw;
-        this.canvas.height = ih;
+        this.canvas.width = 1920;
+        this.canvas.height = 1080;
         this.canvas.style.width = displayW + 'px';
         this.canvas.style.height = displayH + 'px';
         this.scale = scale;
-        this.renderScale = isMobile ? 0.5 : 1;
+        this.renderScale = 1;
 
         this.ctx.imageSmoothingEnabled = false;
     }
