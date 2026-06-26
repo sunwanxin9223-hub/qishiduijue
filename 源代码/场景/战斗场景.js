@@ -6,7 +6,9 @@ import { SpriteManager } from '../核心/雪碧图管理器.js';
 
 export class BattleScene {
     constructor(g, d = {}) {
-        this.g = g; this.w = 1920; this.h = 1080;
+        this.g = g; this.w = this.g.canvas.width; this.h = this.g.canvas.height;
+        // 坐标转换：JSON中心坐标系 → 画布左上角坐标系
+        this._cx = this.w/2; this._cy = this.h/2;
         this.im = {}; this.ok = false;
         this.useSprite = false; // true=雪碧图, false=逐帧（技能做完后再切）
         this.gameMode = d.gameMode || '一局定胜负';
@@ -30,7 +32,7 @@ export class BattleScene {
         this._isMobile = false; // 手机端检测
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
-        this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
+        this._beamCvs.width = this.w; this._beamCvs.height = this._cy; // 尺寸固定
         this.pingpongSeq = [];
         for(let i=1;i<=120;i++)this.pingpongSeq.push(i);
         for(let i=121;i>=2;i--)this.pingpongSeq.push(i);
@@ -455,9 +457,9 @@ export class BattleScene {
             });
             await L('普攻','游戏资源/图像/UI/普攻_透明.png');
             // P1普攻（左，JSON center -790.28,-395.84, display 112.44×112.44）
-            this.atkBtn1 = { x:-790.28+960-56.22, y:-395.84+540-56.22, w:112.44, h:112.44 };
+            this.atkBtn1 = { x:-790.28+this._cx-56.22, y:-395.84+540-56.22, w:112.44, h:112.44 };
             // P2普攻（右，JSON center 794.52,-383.12）
-            this.atkBtn2 = { x:794.52+960-56.22, y:-383.12+540-56.22, w:112.44, h:112.44 };
+            this.atkBtn2 = { x:794.52+this._cx-56.22, y:-383.12+540-56.22, w:112.44, h:112.44 };
             // 结束回合按钮（左下方）
             this.endBtn = { x:this.atkBtn1.x, y:this.atkBtn1.y+112.44+15, w:112.44, h:40 };
         }
@@ -469,22 +471,22 @@ export class BattleScene {
         this._deferredLoad();
 
         // 初始化位置数据
-        const V = (cx, cy) => ({ cx, cy, sx: cx+960, sy: cy+540 });
+        const V = (cx, cy) => ({ cx, cy, sx: cx+this._cx, sy: cy+540 });
         this.pos = {
             V1: V(-845.04, 359.75), V2: V(-545.69, 359.75), V3: V(-147.11, 359.75),
             V4: V(259, 359.75),      V5: V(583.32, -384.37), V6: V(259, -358.71),
             V7: V(-147.11, -158.57), V8: V(-545.69, 45),     V9: V(837.19, 359.75),
         };
         this.zones = [
-            { id:'V1', x:-901.98+960, y:390.49+540, w:107.7, h:90.78 },
-            { id:'V2', x:-603.23+960, y:387.07+540, w:107.7, h:94.2 },
-            { id:'V3', x:-204.72+960, y:389.01+540, w:108.65, h:93.75 },
-            { id:'V4', x:203.47+960, y:383.6+540, w:107.7, h:94.2 },
-            { id:'V5', x:530.67+960, y:-362.55+540, w:100.16, h:96.11 },
-            { id:'V6', x:206.84+960, y:-335+540, w:101.04, h:93.55 },
-            { id:'V7', x:-204.24+960, y:-136.58+540, w:107.7, h:97.62 },
-            { id:'V8', x:-603.2+960, y:69+540, w:107.7, h:94.2 },
-            { id:'V9', x:723.56+960, y:106.81+540, w:217.14, h:416.48 },
+            { id:'V1', x:-901.98+this._cx, y:390.49+540, w:107.7, h:90.78 },
+            { id:'V2', x:-603.23+this._cx, y:387.07+540, w:107.7, h:94.2 },
+            { id:'V3', x:-204.72+this._cx, y:389.01+540, w:108.65, h:93.75 },
+            { id:'V4', x:203.47+this._cx, y:383.6+540, w:107.7, h:94.2 },
+            { id:'V5', x:530.67+this._cx, y:-362.55+540, w:100.16, h:96.11 },
+            { id:'V6', x:206.84+this._cx, y:-335+540, w:101.04, h:93.55 },
+            { id:'V7', x:-204.24+this._cx, y:-136.58+540, w:107.7, h:97.62 },
+            { id:'V8', x:-603.2+this._cx, y:69+540, w:107.7, h:94.2 },
+            { id:'V9', x:723.56+this._cx, y:106.81+540, w:217.14, h:416.48 },
         ];
 
         this.graph = {};
@@ -516,7 +518,7 @@ export class BattleScene {
             { pos:'V4', flip:false, label:this.mode==='好友对战'?'好友':'玩家2', hp:2100, maxHp:2100, dispHp:2100, dead:false, buff:false, buffTurns:0, _buffedTurn:false, speedMode:false, stealthed:0, frozen:false, frozenTurns:0, shielded:false, shieldCdUI:0, poisoned:false, poisonTurns:0, weakened:false, weakenTurns:0, animOverride:null, animFrame:1, animTimer:0 },
         ];
 
-        this.pauseBtn = { x:-924.6+960, y:-515.76+540, w:63.31, h:63.31 };
+        this.pauseBtn = { x:-924.6+this._cx, y:-515.76+540, w:63.31, h:63.31 };
         this.speedBtn = { x:1850, y:10, w:60, h:36 }; // 右上角播放速度
         this._prevPos = [this.players[0].pos, this.players[1].pos];
         this.setupInput();
@@ -524,9 +526,9 @@ export class BattleScene {
     }
 
     setupScene(){
-        const A=(tx,ty,w,h)=>({x:tx+960,y:ty+540,w,h});
+        const A=(tx,ty,w,h)=>({x:tx+this._cx,y:ty+540,w,h});
         this.scene=[
-            {t:'pp',k:'bg',...A(-960,-540,1920,1080),o:15},
+            {t:'pp',k:'bg',...A(-this._cx,-540,this.w,this._cy),o:15},
             {t:'img',k:'地面',...A(-953.62,460.75,1910,70.26),o:14,til:true,tbW:41,tbH:41},
             {t:'lp',k:'fz',...A(689.41,-194.32,288.86,779.26),o:13},
             {t:'lp',k:'sz',...A(150.76,-347.97,845.93,663.26),o:12},
@@ -1044,7 +1046,7 @@ export class BattleScene {
         this.paused = true;
         this._playSfx('victory', 120);
         if(this.winner){
-            // 最终结算：序列帧动画，填满画布播放（1280×720原图→1920×1080）
+            // 最终结算：序列帧动画，填满画布播放（1280×720原图→this.w×this._cy）
             this.victoryAnim = {type:'final', timer:0, scale:1.0, targetScale:1.0, frame:1, frameTimer:0, showText:false};
         } else if(this.roundWinner && this.gameMode==='三局两胜'){
             // BO3单局结算：静态图
@@ -1277,7 +1279,7 @@ export class BattleScene {
         this.moving={pi,fromV,toV,type:animType,fps,totalFrames,kfs,curFrame:1,timer:0};
     }
 
-    p(e){const r=this.g.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(1920/r.width),y:(e.clientY-r.top)*(1080/r.height)};}
+    p(e){const r=this.g.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(this.w/r.width),y:(e.clientY-r.top)*(this.h/r.height)};}
     cf(){const idx=Math.floor(this._gameTime*this.fps);return(idx%this.total)+1;}
     bf(){const idx=Math.floor(this._gameTime*this.fps);return this.pingpongSeq[idx%this.ppLen];}
     _fi(){return Math.floor(this._gameTime*this.fps);} // 帧索引（用于 _bgLoad 等需要 fIdx 的地方）
@@ -1731,7 +1733,7 @@ export class BattleScene {
         ctx.fillText(smLabel, sb.x+sb.w/2, sb.y+sb.h/2+5);
         // 首次提示弹窗
         if(this._speedTutorial){
-            const tx = 960, ty = 240, tw = 420, th = 160;
+            const tx = this._cx, ty = 240, tw = 420, th = 160;
             ctx.fillStyle='rgba(0,0,0,0.85)';ctx.fillRect(tx-tw/2,ty-th/2,tw,th);
             ctx.strokeStyle='rgba(224,192,112,0.6)';ctx.lineWidth=2;ctx.strokeRect(tx-tw/2,ty-th/2,tw,th);
             ctx.fillStyle='#e0c070';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
@@ -1784,7 +1786,7 @@ export class BattleScene {
                 bc.clearRect(0, 0, this.w, this.h);
                 for(const vid of Object.keys(moves)){
                     const z=this.pos[vid];if(!z)continue;
-                    const gx=z.cx+960,base=z.cy+540+100;
+                    const gx=z.cx+this._cx,base=z.cy+540+100;
                     const beamH=180,top=base-beamH,bands=16,bh=beamH/bands;
                     const levels=[{hw:6,a:1},{hw:14,a:0.7},{hw:28,a:0.4},{hw:40,a:0.2},{hw:54,a:0.08}];
                     for(const lv of levels){
@@ -1828,7 +1830,7 @@ export class BattleScene {
                     cx=m.d11x; cy=m.d11y;
                 }
             }
-            const sx=cx+960-r.w/2+(p._meleeOffX||0), sy=cy+540-r.h/2;
+            const sx=cx+this._cx-r.w/2+(p._meleeOffX||0), sy=cy+540-r.h/2;
             // melee中：攻击方使用melee动画，防御方使用受击动画
             if(this.melee && this.melee.active!==false){
                 if(i===this.melee.pi && this.melee.atkFrame < 121 && !p.dead){
@@ -1932,7 +1934,7 @@ export class BattleScene {
             const f6Off = 50*ratio, f50Off = 350*ratio;
             const t = Math.max(0, Math.min(1, (pf-6)/(51-6)));
             const offX = f6Off + (f50Off - f6Off) * t;
-            const effX = atkPos.cx + 960 + (effFaceRight ? offX : -offX);
+            const effX = atkPos.cx + this._cx + (effFaceRight ? offX : -offX);
             const yFrac = 0.02 + 0.88 * t; // 从攻方斜飞到防方
             const effY = atkPos.cy + 540 + (defPos.cy - atkPos.cy) * yFrac + 11.06;
             const sc = 0.151, bw = 1280*sc, bh = 720*sc;
@@ -1953,10 +1955,10 @@ export class BattleScene {
             if(p.pos===enemy.pos){ f0Off = 10; f119Off = 10; }
             const t = Math.max(0, Math.min(1, (ff-1)/(119-1)));
             const offX = f0Off + (f119Off - f0Off) * t;
-            const effX = atkPos.cx + 960 + (effFaceRight ? offX : -offX);
+            const effX = atkPos.cx + this._cx + (effFaceRight ? offX : -offX);
             const yFrac = 0.02 + 0.88 * t;
             const effY = atkPos.cy + 540 + (defPos.cy - atkPos.cy) * yFrac + 13;
-            const sc = 0.67, fw = 720, fh = 960, bw = fw*sc, bh = fh*sc;
+            const sc = 0.67, fw = 720, fh = this._cx, bw = fw*sc, bh = fh*sc;
             const fb = this._getFrame('flameBlade', ff);
             if(this._ok(fb)){
                 ctx.save();
@@ -1977,7 +1979,7 @@ export class BattleScene {
             // 倾斜激光：JSON标定(V8↔V6), 位置=攻方+(守方-攻方)×比例
             const fracX = atkOnRight ? 0.564 : 0.563;
             const fracY = atkOnRight ? 0.483 : 0.514;
-            const lx = atkPos.cx + 960 + (defPos.cx - atkPos.cx) * fracX;
+            const lx = atkPos.cx + this._cx + (defPos.cx - atkPos.cx) * fracX;
             const ly = atkPos.cy + 540 + (defPos.cy - atkPos.cy) * fracY;
             const dist = this._graphDist(p.pos, enemy.pos);
             const scX = 0.618 * (dist===1 ? 0.5 : 1);
@@ -2026,7 +2028,7 @@ export class BattleScene {
                     const fw = this._fw(tb), fh = this._fh(tb);
                     const tbw = fw*0.44, tbh = fh*0.44;
                     ctx.save();
-                    const tsx = tcx + 960, tsy = tcy + 540;
+                    const tsx = tcx + this._cx, tsy = tcy + 540;
                     const atkP = this.players[m.pi], defP = this.players[1-m.pi];
                     const same = atkP.pos===defP.pos;
                     const atkOnRight = same ? !atkP.flip : this.pos[atkP.pos].cx > this.pos[defP.pos].cx;
@@ -2046,7 +2048,7 @@ export class BattleScene {
         ctx.font='bold 22px "Microsoft YaHei",sans-serif';ctx.textAlign='center';
         for(let i=0;i<this.players.length;i++){
             const p=this.players[i];
-            const pos=this.pos[p.pos],lx=pos.cx+960,ly=pos.cy+540-r.h/2+210;
+            const pos=this.pos[p.pos],lx=pos.cx+this._cx,ly=pos.cy+540-r.h/2+210;
             const m=ctx.measureText(p.label);
             const pw=m.width+28, ph=30, px=lx-pw/2, py=ly-22;
             const isTurn = i===this.turn;
@@ -2055,7 +2057,7 @@ export class BattleScene {
                 ctx.shadowColor='#ffd700';ctx.shadowBlur=4;
                 ctx.fillStyle='rgba(255,255,255,0.95)';this.rr(ctx,px,py,pw,ph,8);
                 ctx.shadowBlur=0;
-                ctx.fillStyle='#c8960a';ctx.fillText(p.label,lx,ly-1);
+                ctx.fillStyle='#c8this._cxa';ctx.fillText(p.label,lx,ly-1);
                 ctx.fillStyle='#ffd700';ctx.fillText(p.label,lx,ly);
             } else {
                 // 未轮到：暗底灰字
@@ -2130,7 +2132,7 @@ export class BattleScene {
         const rh=this.charR.h;
         for(const dp of this.dmgPopups){
             const pp=this.players[dp.px],pos=this.pos[pp.pos];
-            const px=pos.cx+960,py=pos.cy+540-rh/2+100-dp.timer*60;
+            const px=pos.cx+this._cx,py=pos.cy+540-rh/2+100-dp.timer*60;
             const alpha=Math.max(0,1-dp.timer/1.2);
             // 外发光+描边更显眼
             ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=6;
@@ -2150,13 +2152,13 @@ export class BattleScene {
             const mw = ctx.measureText(h.text).width;
             // 背景药丸
             ctx.fillStyle = `rgba(0,0,0,${alpha*0.75})`;
-            this.rr(ctx, 960-mw/2-22, 370, mw+44, 44, 22);
+            this.rr(ctx, this._cx-mw/2-22, 370, mw+44, 44, 22);
             ctx.strokeStyle = `rgba(${h.color||'255,60,60'},${alpha*0.5})`;
-            ctx.lineWidth = 1; this.rr(ctx, 960-mw/2-22, 370, mw+44, 44, 22, true);
+            ctx.lineWidth = 1; this.rr(ctx, this._cx-mw/2-22, 370, mw+44, 44, 22, true);
             // 文字
             ctx.fillStyle = `rgba(${h.color||'255,60,60'},${alpha})`;
             ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
-            ctx.fillText(h.text, 960, 402);
+            ctx.fillText(h.text, this._cx, 402);
             ctx.shadowBlur = 0;
         }
 
@@ -2220,7 +2222,7 @@ export class BattleScene {
             else hint += ' | 可用技能';
             hint += ' | Enter结束';
         }
-        ctx.fillText(hint,960,this.h-8);
+        ctx.fillText(hint,this._cx,this.h-8);
 
         if(this.paused){
             if(this.victoryAnim) this.renderVictory(ctx);
@@ -2271,7 +2273,7 @@ export class BattleScene {
             const cf = this.frameCache.get('vicFinal'+f);
             if(cf && cf.naturalWidth>0){
                 ctx.save();ctx.translate(this.w/2,this.h/2);
-                ctx.scale(1.5,1.5); // JSON scale: 1280×720 → 1920×1080
+                ctx.scale(1.5,1.5); // JSON scale: 1280×720 → this.w×this._cy
                 ctx.drawImage(cf,-640,-360,1280,720);
                 ctx.restore();
             }
@@ -2286,7 +2288,7 @@ export class BattleScene {
         }
         // 文字和按钮（缩放完成后显示）
         if(va.showText){
-            const izCx=960, izCy=901.3;
+            const izCx=this._cx, izCy=901.3;
             ctx.textAlign='center';
             if(this.winner || this.roundWinner){
                 const label = this.winner ? this.winner.label : this.roundWinner;
@@ -2326,7 +2328,7 @@ export class BattleScene {
     // 胜利画面点击
     victoryClick(x,y){
         const va = this.victoryAnim; if(!va||!va.showText)return;
-        const izCx=960, izCy=901.3;
+        const izCx=this._cx, izCy=901.3;
         if(this.winner){
             // 返回主菜单按钮
             const bx=izCx-110, by=izCy+55, bw=220, bh=45;
@@ -2388,7 +2390,7 @@ export class BattleScene {
         ctx.fillStyle=fg;this.rr(ctx,x,by,w*val,10,5);
         const hx=x+w*val, hy=y+h/2;
         const grd=ctx.createRadialGradient(hx-2,hy-2,2,hx,hy,12);
-        grd.addColorStop(0,'#fff8dc');grd.addColorStop(0.5,'#ffd700');grd.addColorStop(1,'#b8960a');
+        grd.addColorStop(0,'#fff8dc');grd.addColorStop(0.5,'#ffd700');grd.addColorStop(1,'#b8this._cxa');
         ctx.fillStyle=grd;ctx.beginPath();ctx.arc(hx,hy,12,0,Math.PI*2);ctx.fill();
         ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(hx,hy,12,0,Math.PI*2);ctx.stroke();
     }
@@ -2431,16 +2433,16 @@ export class BattleScene {
         ctx.fillStyle='#0a0a15';ctx.fillRect(0,0,this.w,this.h);
         // 标题
         ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold 48px sans-serif';
-        ctx.textAlign='center';ctx.fillText('骑士对决',960,430);
+        ctx.textAlign='center';ctx.fillText('骑士对决',this._cx,430);
         // 转圈粒子
         for(let i=0;i<8;i++){
             const a=i/8*Math.PI*2+t/2000;
             const p=0.3+0.3*Math.sin(t/300+i);
             ctx.fillStyle=`rgba(224,192,112,${p})`;
-            ctx.beginPath();ctx.arc(960+Math.cos(a)*60,500+Math.sin(a)*60,5+p*2,0,Math.PI*2);ctx.fill();
+            ctx.beginPath();ctx.arc(this._cx+Math.cos(a)*60,500+Math.sin(a)*60,5+p*2,0,Math.PI*2);ctx.fill();
         }
         ctx.fillStyle='#e0c070';ctx.font='bold 24px sans-serif';
-        ctx.fillText('加载中'+'.'.repeat(Math.floor(t/400)%4),960,570);
+        ctx.fillText('加载中'+'.'.repeat(Math.floor(t/400)%4),this._cx,570);
         // 进度条 — 假进度：超过10秒无更新则自动蠕动
         let pct = this.loadingProgress || 0;
         const realPct = pct;
@@ -2480,7 +2482,7 @@ export class BattleScene {
         ctx.arcTo(bx,by,bx+br,by,br);ctx.stroke();
         // 百分比文字（取整，不显示小数）
         ctx.fillStyle='#e0c070';ctx.font='bold 14px sans-serif';
-        ctx.fillText(Math.floor(pct)+'%',960,638);
+        ctx.fillText(Math.floor(pct)+'%',this._cx,638);
     }
     destroy(){
         const c=this.g.canvas;
