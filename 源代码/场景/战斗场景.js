@@ -25,7 +25,8 @@ export class BattleScene {
         this.loadingProgress = 0;
         this._lastProgressTime = Date.now();
         this._lastRealPct = 0;
-        this.speedMult = 1/3; // 默认1/3速防卡，点右上角切换
+        this.speedMult = 1/3; // 默认1/3速防卡
+        this._speedTutorial = false; // 首次弹窗
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -439,7 +440,11 @@ export class BattleScene {
         await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 120000))]);
         this.loadingProgress = 80;
         this.ok = true;
-        // 后台异步加载：音效、配音、胜利结算图、冻结图（不阻塞游戏启动）
+        // 首次进入提示
+        if (!localStorage.getItem('qs_speed_tip')) {
+            this._speedTutorial = true;
+        }
+        // 后台异步加载
         this._deferredLoad();
 
         // 初始化位置数据
@@ -524,7 +529,19 @@ export class BattleScene {
         this._cl=(e)=>{
             const{x,y}=this.p(e);
             if(this.sliderDrag){this.sliderDrag=null;return;}
-            // 大部分点击用版本1，移动/准备好用版本2（特殊处理在对应handler里）
+            // 首次提示弹窗：任意点击关闭
+            if(this._speedTutorial){
+                this._speedTutorial = false;
+                localStorage.setItem('qs_speed_tip', '1');
+                // 如果点的是速度按钮，顺便切换速度
+                if(x>=this.speedBtn.x&&x<=this.speedBtn.x+this.speedBtn.w&&y>=this.speedBtn.y&&y<=this.speedBtn.y+this.speedBtn.h){
+                    const speeds = [1/3, 2/3, 1];
+                    const idx = speeds.indexOf(this.speedMult);
+                    this.speedMult = speeds[(idx+1)%4];
+                }
+                return;
+            }
+            // 大部分点击用版本1，移动/准备好用版本2
             if(this.paused){
                 if(this.victoryAnim){this.g.playClick();this.victoryClick(x,y);return;}
                 if(!this.showSettings){this.g.playClick();this.pauseClick(x,y);}
@@ -1645,10 +1662,40 @@ export class BattleScene {
         const sb=this.speedBtn;
         const labels = {[1/3]:'x1',[2/3]:'x2',[1]:'x3'};
         const smLabel = labels[this.speedMult] || 'x1';
+        if(this._speedTutorial){
+            // 高亮框 + 脉冲动画
+            const pulse = 0.5 + 0.5 * Math.sin(Date.now()/300);
+            ctx.strokeStyle=`rgba(255,215,0,${0.6+pulse*0.4})`;ctx.lineWidth=3;
+            ctx.strokeRect(sb.x-4,sb.y-4,sb.w+8,sb.h+8);
+            ctx.fillStyle='rgba(255,215,0,0.2)';ctx.fillRect(sb.x-4,sb.y-4,sb.w+8,sb.h+8);
+        }
         ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(sb.x,sb.y,sb.w,sb.h);
         ctx.strokeStyle='rgba(224,192,112,0.5)';ctx.lineWidth=1.5;ctx.strokeRect(sb.x,sb.y,sb.w,sb.h);
         ctx.fillStyle='#e0c070';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
         ctx.fillText(smLabel, sb.x+sb.w/2, sb.y+sb.h/2+5);
+        // 首次提示弹窗
+        if(this._speedTutorial){
+            const tx = 960, ty = 240, tw = 420, th = 160;
+            ctx.fillStyle='rgba(0,0,0,0.85)';ctx.fillRect(tx-tw/2,ty-th/2,tw,th);
+            ctx.strokeStyle='rgba(224,192,112,0.6)';ctx.lineWidth=2;ctx.strokeRect(tx-tw/2,ty-th/2,tw,th);
+            ctx.fillStyle='#e0c070';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+            ctx.fillText('⚡ 播放速度提示', tx, ty-38);
+            ctx.fillStyle='#fff';ctx.font='16px sans-serif';
+            ctx.fillText('觉得动画慢？点击右上角按钮', tx, ty);
+            ctx.fillText('可切换 ×1 / ×2 / ×3 倍速', tx, ty+25);
+            // 知道了按钮
+            const bx2 = tx-50, by2 = ty+48, bw2 = 100, bh2 = 36;
+            ctx.fillStyle='rgba(224,192,112,0.3)';ctx.fillRect(bx2,by2,bw2,bh2);
+            ctx.strokeStyle='#e0c070';ctx.lineWidth=1.5;ctx.strokeRect(bx2,by2,bw2,bh2);
+            ctx.fillStyle='#e0c070';ctx.font='bold 16px sans-serif';
+            ctx.fillText('知道了', tx, by2+26);
+            // 引导箭头
+            const arrowX = sb.x + sb.w/2, arrowY = sb.y + sb.h + 25;
+            ctx.strokeStyle=`rgba(255,215,0,${0.5+pulse*0.5})`;ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(arrowX, sb.y+sb.h+4);ctx.lineTo(arrowX, arrowY);
+            ctx.moveTo(arrowX-6, arrowY-8);ctx.lineTo(arrowX, arrowY);ctx.lineTo(arrowX+6, arrowY-8);
+            ctx.stroke();
+        }
 
         // 可移动光圈光柱（缓存到离屏canvas，避免大量fillRect卡帧）
         if(!this.moving&&!this.moveLoading&&!this.moved){
