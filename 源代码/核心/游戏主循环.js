@@ -124,11 +124,15 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 全局半分辨率 */
+    /** 响应式缩放 — 手机半分辨率，桌面全分辨率 */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth, ph = parent.clientHeight;
-        const iw = 960, ih = 540;
+        const isMobile = window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024);
+        // 桌面端：全分辨率 1920×1080
+        // 手机端：半分辨率 960×540（GPU性能优化）
+        const iw = isMobile ? 960 : 1920;
+        const ih = isMobile ? 540 : 1080;
         const scale = Math.min(pw / iw, ph / ih);
 
         this.canvas.width = iw;
@@ -136,6 +140,7 @@ export class Game {
         this.canvas.style.width = Math.floor(iw * scale) + 'px';
         this.canvas.style.height = Math.floor(ih * scale) + 'px';
         this.scale = scale;
+        this._halfRes = isMobile;
         this.ctx.imageSmoothingEnabled = false;
     }
 
@@ -196,7 +201,7 @@ export class Game {
                 }
                 if (this.currentScene.render) {
                     this.ctx.save();
-                    this.ctx.scale(0.5, 0.5);
+                    if (this._halfRes) this.ctx.scale(0.5, 0.5);
                     this.currentScene.render(this.ctx, this.deltaTime);
                     this.ctx.restore();
                 }
