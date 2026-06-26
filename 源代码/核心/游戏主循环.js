@@ -132,8 +132,8 @@ export class Game {
         const ph = this.canvas.parentElement.clientHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        // 保持比例缩放到能完整显示在可视区域内
-        const scale = Math.min(pw / iw, ph / ih);
+        // 手机端拉伸填充，桌面端保持比例
+        const scale = isMobile ? Math.max(pw / iw, ph / ih) : Math.min(pw / iw, ph / ih);
 
         this.canvas.width = iw;
         this.canvas.height = ih;
