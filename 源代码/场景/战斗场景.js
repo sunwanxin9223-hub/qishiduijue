@@ -21,6 +21,7 @@ export class BattleScene {
         this._prevPos = ['',''];
         this.fps = 30; this.total = 121;
         this._gameTime = 0;
+        this._lastGoodFrame = {}; // 场景帧fallback — 当前帧加载中时用上一帧
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -1581,7 +1582,13 @@ export class BattleScene {
             if(l.t==='pp') img = this._getFrame(l.k, bf);
             else if(l.t==='lp') img = this._getFrame(l.k, fn);
             else img = this.im[l.k];
-            if(!img||!this._ok(img))continue;
+            if(!img||!this._ok(img)){
+                // 帧未加载→用缓存的上一帧兜底，避免闪黑
+                img = this._lastGoodFrame[l.k];
+                if(!img||!this._ok(img)) continue;
+            } else {
+                this._lastGoodFrame[l.k] = img;
+            }
             if(l.til){
                 const isSp = img.__sp && img.img;
                 const tileKey = isSp ? (img.img.src+'_'+img.sx+'_'+img.sy) : img.src;
