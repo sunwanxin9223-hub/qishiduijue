@@ -367,10 +367,7 @@ export class BattleScene {
             if (keys) keys.forEach(k => needed.add(k));
         }
         for (const k of needed) {
-            await Promise.race([
-                this.sprite.load(k, `游戏资源/雪碧图/${k}.json`),
-                new Promise(r => setTimeout(r, 10000))
-            ]).catch(() => {});
+            await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
         }
         this.loadingProgress = 55;
         // 场景帧 + 结算帧 + 音效 — 全部并行，各有超时
@@ -388,7 +385,7 @@ export class BattleScene {
                         img.onload = () => { if(!done){done=true;this.frameCache.set(ck,img);r();} };
                         img.onerror = () => { if(!done){done=true;r();} };
                         img.src = `${dir}/frame_${padN(n)}.png`;
-                        setTimeout(() => { if(!done){done=true;r();} }, 8000);
+                        setTimeout(() => { if(!done){done=true;r();} }, 30000);
                     }));
                 }
             }
@@ -402,7 +399,7 @@ export class BattleScene {
                 img.onload = () => { if(!done){done=true;this.frameCache.set(ck,img);r();} };
                 img.onerror = () => { if(!done){done=true;r();} };
                 img.src = `${this.victoryFrameDir}/frame_${padN(n)}.png`;
-                setTimeout(() => { if(!done){done=true;r();} }, 8000);
+                setTimeout(() => { if(!done){done=true;r();} }, 30000);
             }));
         }
         // 音效
@@ -422,7 +419,7 @@ export class BattleScene {
                 a.oncanplaythrough = () => { if(!done){done=true;r();} };
                 a.onerror = () => { if(!done){done=true;r();} };
                 a.load();
-                setTimeout(() => { if(!done){done=true;r();} }, 6000);
+                setTimeout(() => { if(!done){done=true;r();} }, 30000);
             }));
         }
         for (const fn of this.skills1.concat(this.skills2)) {
@@ -433,10 +430,10 @@ export class BattleScene {
                 a.oncanplaythrough = () => { if(!done){done=true;r();} };
                 a.onerror = () => { if(!done){done=true;r();} };
                 a.load();
-                setTimeout(() => { if(!done){done=true;r();} }, 6000);
+                setTimeout(() => { if(!done){done=true;r();} }, 30000);
             }));
         }
-        await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 15000))]);
+        await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 120000))]);
         this.loadingProgress = 80;
         this.ok = true;
         // 后台异步加载：音效、配音、胜利结算图、冻结图（不阻塞游戏启动）
@@ -2338,9 +2335,9 @@ export class BattleScene {
         ctx.arcTo(bx+bw,by+bh,bx+bw-br,by+bh,br);ctx.lineTo(bx+br,by+bh);
         ctx.arcTo(bx,by+bh,bx,by+bh-br,br);ctx.lineTo(bx,by+br);
         ctx.arcTo(bx,by,bx+br,by,br);ctx.stroke();
-        // 百分比文字
+        // 百分比文字（取整，不显示小数）
         ctx.fillStyle='#e0c070';ctx.font='bold 14px sans-serif';
-        ctx.fillText(pct+'%',960,638);
+        ctx.fillText(Math.floor(pct)+'%',960,638);
     }
     destroy(){
         const c=this.g.canvas;

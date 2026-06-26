@@ -21,36 +21,42 @@ export class SpriteManager {
      */
     async load(key, jsonPath) {
         if (this.sheets.has(key)) return this.sheets.get(key);
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 10000);
-        const resp = await fetch(jsonPath, {signal: ctrl.signal}).finally(() => clearTimeout(t));
-        const meta = await resp.json();
-        // 多sheet支持：{frameW,frameH,cols,total,sheets:[{file,start,count}]}
-        // 单sheet兼容：{frameW,frameH,cols,rows,total,sheetW,sheetH}
-        if(meta.sheets){
-            const imgs = await Promise.all(meta.sheets.map(s => {
-                const pp = jsonPath.replace(/\/[^\/]+$/, '/'+s.file);
-                return new Promise((resolve, reject) => {
-                    const i = new Image();
-                    i.onload = () => resolve({img:i, start:s.start});
-                    i.onerror = reject;
-                    i.src = pp;
-                });
-            }));
-            const entry = { imgs, meta };
-            this.sheets.set(key, entry);
-            return entry;
-        } else {
-            const pngPath = jsonPath.replace(/\.json$/, '.png');
-            const img = await new Promise((resolve, reject) => {
-                const i = new Image();
-                i.onload = () => resolve(i);
-                i.onerror = reject;
-                i.src = pngPath;
-            });
-            const entry = { img, meta };
-            this.sheets.set(key, entry);
-            return entry;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 30000);
+                const resp = await fetch(jsonPath, {signal: ctrl.signal}).finally(() => clearTimeout(t));
+                const meta = await resp.json();
+                // 多sheet支持
+                if(meta.sheets){
+                    const imgs = await Promise.all(meta.sheets.map(s => {
+                        const pp = jsonPath.replace(/\/[^\/]+$/, '/'+s.file);
+                        return new Promise((resolve, reject) => {
+                            const i = new Image();
+                            i.onload = () => resolve({img:i, start:s.start});
+                            i.onerror = reject;
+                            i.src = pp;
+                        });
+                    }));
+                    const entry = { imgs, meta };
+                    this.sheets.set(key, entry);
+                    return entry;
+                } else {
+                    const pngPath = jsonPath.replace(/\.json$/, '.png');
+                    const img = await new Promise((resolve, reject) => {
+                        const i = new Image();
+                        i.onload = () => resolve(i);
+                        i.onerror = reject;
+                        i.src = pngPath;
+                    });
+                    const entry = { img, meta };
+                    this.sheets.set(key, entry);
+                    return entry;
+                }
+            } catch(e) {
+                if (attempt === 3) throw e;
+                await new Promise(r => setTimeout(r, 2000));
+            }
         }
     }
 
