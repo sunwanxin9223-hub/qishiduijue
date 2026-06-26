@@ -420,6 +420,12 @@ export class BattleScene {
             }));
         }
         await Promise.all(audioPreload).catch(() => {});
+        // GPU预热：强制创建buff/buffIdle的雪碧图描述符，避免首次绘制时GPU纹理上传卡顿
+        if(this.useSprite){
+            for(const k of ['buff','buffIdle']){
+                if(this.sprite.has(k)) this._getFrame(k, 1);
+            }
+        }
         this.ok = true;
 
         // 初始化位置数据
