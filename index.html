@@ -24,30 +24,22 @@
 <body>
     <div id="game-container"><canvas id="game-canvas"></canvas></div>
     <script>
-        // 强制横屏：手机竖屏时旋转整个游戏
+        // 手机端检测
         (function(){
             window._gameRotated = false;
-            function lock() {
-                var isPortrait = window.innerHeight > window.innerWidth && window.innerWidth < 900;
-                var c = document.getElementById('game-container');
-                window._gameRotated = isPortrait;
-                if (isPortrait) {
-                    c.style.position = 'absolute';
-                    c.style.top = '0';
-                    c.style.left = '100vw';
-                    c.style.width = '100vw';
-                    c.style.height = '100vh';
-                    c.style.transform = 'rotate(90deg)';
-                    c.style.transformOrigin = 'top left';
-                } else {
-                    c.style.position = c.style.top = c.style.left = '';
-                    c.style.width = c.style.height = '';
-                    c.style.transform = c.style.transformOrigin = '';
+            window._isMobile = false;
+            function check(){
+                window._isMobile = ('ontouchstart' in window && window.innerWidth < 1024);
+                if(window._isMobile && screen.orientation && screen.orientation.lock){
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+                if(window._isMobile && window.orientation && window.orientation.lock){
+                    window.orientation.lock('landscape').catch(() => {});
                 }
             }
-            window.addEventListener('resize', lock);
-            window.addEventListener('orientationchange', function(){ setTimeout(lock, 100); });
-            lock();
+            check();
+            window.addEventListener('resize', check);
+            window.addEventListener('orientationchange', function(){ setTimeout(check, 200); });
         })();
     </script>
     <script type="module" src="源代码/main.js?v=291"></script>

@@ -442,7 +442,7 @@ export class BattleScene {
         this.loadingProgress = 80;
         this.ok = true;
         // 手机端检测 + 加载普攻图标
-        this._isMobile = window._gameRotated || ('ontouchstart' in window && window.innerWidth < 1024);
+        this._isMobile = window._isMobile || false;
         if(this._isMobile){
             const L = (k, u) => new Promise(r => {
                 const i = new Image(); i.onload = () => { this.im[k] = i; r(); };
@@ -1259,14 +1259,7 @@ export class BattleScene {
         this.moving={pi,fromV,toV,type:animType,fps,totalFrames,kfs,curFrame:1,timer:0};
     }
 
-    p(e){
-        const r=this.g.canvas.getBoundingClientRect();
-        if(window._gameRotated){
-            // 容器旋转90deg后的坐标修正
-            return{x:(e.clientY-r.top)*(1920/r.width),y:(r.right-e.clientX)*(1080/r.height)};
-        }
-        return{x:(e.clientX-r.left)*(1920/r.width),y:(e.clientY-r.top)*(1080/r.height)};
-    }
+    p(e){const r=this.g.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(1920/r.width),y:(e.clientY-r.top)*(1080/r.height)};}
     cf(){const idx=Math.floor(this._gameTime*this.fps);return(idx%this.total)+1;}
     bf(){const idx=Math.floor(this._gameTime*this.fps);return this.pingpongSeq[idx%this.ppLen];}
     _fi(){return Math.floor(this._gameTime*this.fps);} // 帧索引（用于 _bgLoad 等需要 fIdx 的地方）

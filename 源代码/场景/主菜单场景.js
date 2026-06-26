@@ -95,13 +95,7 @@ export class MenuScene {
         if(x<px||x>px+pw||y<py||y>py+ph){this.s=false;}
     }
 
-    p(e){
-        const r=this.g.canvas.getBoundingClientRect();
-        if(window._gameRotated){
-            return{x:(e.clientY-r.top)*(this.w/r.width),y:(r.right-e.clientX)*(this.h/r.height)};
-        }
-        return{x:(e.clientX-r.left)*(this.w/r.width),y:(e.clientY-r.top)*(this.h/r.height)};
-    }
+    p(e){const r=this.g.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(this.w/r.width),y:(e.clientY-r.top)*(this.h/r.height)};}
     updateSlider(x){const sx=580+200;const sw=380;const val=Math.max(0,Math.min(1,(x-sx)/sw));if(this.sliderDrag==='sfx')this.g.sfxVol=val;else if(this.sliderDrag==='bgm')this.g.setBgmVol(val);else if(this.sliderDrag==='voice')this.g.voiceVol=val;}
     update(dt){}
 
