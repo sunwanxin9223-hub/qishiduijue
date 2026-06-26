@@ -1,12 +1,12 @@
 /**
  * 骑士对决 — 主入口
  */
-import { Game } from './核心/游戏主循环.js?v=49';
-import { Config } from './核心/全局配置.js?v=49';
-import { MenuScene } from './场景/主菜单场景.js?v=49';
-import { SkillSelectScene } from './场景/技能选择场景.js?v=49';
-import { BattleScene } from './场景/战斗场景.js?v=49';
-import { RoomScene } from './场景/房间场景.js?v=49';
+import { Game } from './核心/游戏主循环.js';
+import { Config } from './核心/全局配置.js';
+import { MenuScene } from './场景/主菜单场景.js';
+import { SkillSelectScene } from './场景/技能选择场景.js';
+import { BattleScene } from './场景/战斗场景.js';
+import { RoomScene } from './场景/房间场景.js';
 
 // 占位
 class P {
