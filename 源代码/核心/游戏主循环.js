@@ -49,6 +49,11 @@ export class Game {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        // 手机端监听可视区域变化（键盘弹出/收起、浏览器UI变化）
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => this.resize());
+            window.visualViewport.addEventListener('scroll', () => this.resize());
+        }
         // BGM 初始化
         this._initBgm();
     }
@@ -124,18 +129,17 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 手机半分辨率填充全屏，桌面全分辨率 */
+    /** 响应式缩放 — 手机半分辨率适配可视区域，桌面全分辨率 */
     resize() {
-        const parent = this.canvas.parentElement;
-        const pw = parent.clientWidth, ph = parent.clientHeight;
         const isMobile = window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024);
-        // 桌面端：全分辨率 1920×1080
-        // 手机端：半分辨率 960×540（GPU性能优化）
+        // 手机端用 visualViewport 获取真正可视区域（排除地址栏/底部栏）
+        const vv = window.visualViewport;
+        const pw = isMobile && vv ? vv.width : this.canvas.parentElement.clientWidth;
+        const ph = isMobile && vv ? vv.height : this.canvas.parentElement.clientHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        // 手机端：拉伸填满全屏，桌面端：保持比例不拉伸
-        const sx = pw / iw, sy = ph / ih;
-        const scale = isMobile ? Math.max(sx, sy) : Math.min(sx, sy);
+        // 保持比例填充可视区域，不超出边界
+        const scale = Math.min(pw / iw, ph / ih);
 
         this.canvas.width = iw;
         this.canvas.height = ih;
