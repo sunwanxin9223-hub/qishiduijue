@@ -5,6 +5,11 @@ Thumbs.db
 .workbuddy/
 *.blob
 *.tmp
+node_modules/
+package.json
+package-lock.json
+*test*.png
+*test*.mjs
 启动游戏.py
 启动游戏.bat
 test_import.mjs

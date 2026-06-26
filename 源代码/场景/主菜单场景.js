@@ -5,7 +5,7 @@ export class MenuScene {
     constructor(g, d={}) { this.g = g; this.w = 1920; this.h = 1080; this.im = {}; this.ok = false; this.s = false; this.hv = null; this.gameMode = d.gameMode || localStorage.getItem('gameMode') || '一局定胜负'; this.sliderDrag = null; this._pressed = null; }
 
     async init() {
-        const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => r(); i.src = u; });
+        const L = (k, u) => new Promise(r => { const i = new Image(); const t = setTimeout(() => { console.warn(`加载超时: ${k} ${u}`); this.im[k] = i; r(); }, 15000); i.onload = () => { clearTimeout(t); this.im[k] = i; r(); }; i.onerror = () => { clearTimeout(t); console.error(`加载失败: ${k} ${u}`); this.im[k] = i; r(); }; i.src = u; });
         await Promise.all([L('bg','游戏资源/图像/UI/主页.png'),L('bg_morning','游戏资源/图像/场景/主页早晨.png'),L('bg_evening','游戏资源/图像/场景/主页晚上.png')]);
         this.ok = true;
         // 时间自适应背景：6-12早晨 12-19下午 19-6晚上
@@ -100,11 +100,9 @@ export class MenuScene {
     update(dt){}
 
     render(ctx){
-        ctx.fillStyle='#000';ctx.fillRect(0,0,this.w,this.h);
+        ctx.fillStyle='#0a0a15';ctx.fillRect(0,0,this.w,this.h);
         if(!this.ok){this.renderLoading(ctx);return;}
-        // 背景图未加载完→继续显示加载
-        const bgImg = this.im[this.bgKey];
-        if(!bgImg||bgImg.naturalWidth===0){this.renderLoading(ctx);return;}
+        // 背景图尝试加载，失败则用纯色背景（不卡加载）
         for(const l of this.layers){const img=this.im[l.i];if(img&&img.naturalWidth>0)ctx.drawImage(img,l.x,l.y,l.w,l.h);}
         if(this.hv||this._pressed){const b=this.btns.find(b=>b.id===this.hv||b.id===this._pressed);if(b){
             const press=this._pressed===b.id;
