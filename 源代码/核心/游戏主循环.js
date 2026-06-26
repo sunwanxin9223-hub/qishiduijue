@@ -124,20 +124,24 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 */
+    /** 响应式缩放 — 手机端分辨率减半省GPU */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth, ph = parent.clientHeight;
-        const scale = Math.min(pw / this.designW, ph / this.designH);
-        const displayW = Math.floor(this.designW * scale);
-        const displayH = Math.floor(this.designH * scale);
+        const isMobile = (pw < 1024 && ph < 1024) || ('ontouchstart' in window);
+        this._mobileHalved = isMobile;
+        const iw = isMobile ? 960 : 1920;
+        const ih = isMobile ? 540 : 1080;
+        const scale = Math.min(pw / iw, ph / ih);
+        const displayW = Math.floor(iw * scale);
+        const displayH = Math.floor(ih * scale);
 
-        this.canvas.width = this.designW;
-        this.canvas.height = this.designH;
+        this.canvas.width = iw;
+        this.canvas.height = ih;
         this.canvas.style.width = displayW + 'px';
         this.canvas.style.height = displayH + 'px';
         this.scale = scale;
-        this.renderScale = 1;
+        this.renderScale = isMobile ? 0.5 : 1;
 
         this.ctx.imageSmoothingEnabled = false;
     }
@@ -198,7 +202,14 @@ export class Game {
                     this.currentScene.update(this.deltaTime);
                 }
                 if (this.currentScene.render) {
-                    this.currentScene.render(this.ctx, this.deltaTime);
+                    if (this.renderScale !== 1) {
+                        this.ctx.save();
+                        this.ctx.scale(this.renderScale, this.renderScale);
+                        this.currentScene.render(this.ctx, this.deltaTime);
+                        this.ctx.restore();
+                    } else {
+                        this.currentScene.render(this.ctx, this.deltaTime);
+                    }
                 }
             } catch(e) {
                 console.error('游戏循环错误:', e);
