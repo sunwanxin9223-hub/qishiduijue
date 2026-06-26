@@ -21,7 +21,9 @@ export class SpriteManager {
      */
     async load(key, jsonPath) {
         if (this.sheets.has(key)) return this.sheets.get(key);
-        const resp = await fetch(jsonPath);
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 10000);
+        const resp = await fetch(jsonPath, {signal: ctrl.signal}).finally(() => clearTimeout(t));
         const meta = await resp.json();
         // 多sheet支持：{frameW,frameH,cols,total,sheets:[{file,start,count}]}
         // 单sheet兼容：{frameW,frameH,cols,rows,total,sheetW,sheetH}

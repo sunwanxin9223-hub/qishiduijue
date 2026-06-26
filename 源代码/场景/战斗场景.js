@@ -365,7 +365,10 @@ export class BattleScene {
             if (keys) keys.forEach(k => needed.add(k));
         }
         for (const k of needed) {
-            await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
+            await Promise.race([
+                this.sprite.load(k, `游戏资源/雪碧图/${k}.json`),
+                new Promise(r => setTimeout(r, 10000))
+            ]).catch(() => {});
         }
         this.loadingProgress = 55;
         // 场景帧 + 结算帧 + 音效 — 全部并行，各有超时
