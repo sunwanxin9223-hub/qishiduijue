@@ -25,6 +25,7 @@ export class BattleScene {
         this.loadingProgress = 0;
         this._lastProgressTime = Date.now();
         this._lastRealPct = 0;
+        this.speedMult = 1/3; // 默认1/3速防卡，点右上角切换
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -490,6 +491,7 @@ export class BattleScene {
         ];
 
         this.pauseBtn = { x:-924.6+960, y:-515.76+540, w:63.31, h:63.31 };
+        this.speedBtn = { x:1850, y:10, w:60, h:36 }; // 右上角播放速度
         this._prevPos = [this.players[0].pos, this.players[1].pos];
         this.setupInput();
         this.setupScene();
@@ -531,6 +533,12 @@ export class BattleScene {
             }
             if(x>=this.pauseBtn.x&&x<=this.pauseBtn.x+this.pauseBtn.w&&y>=this.pauseBtn.y&&y<=this.pauseBtn.y+this.pauseBtn.h){
                 this.g.playClick();this.paused=!0;this.showSettings=!1;return;
+            }
+            if(x>=this.speedBtn.x&&x<=this.speedBtn.x+this.speedBtn.w&&y>=this.speedBtn.y&&y<=this.speedBtn.y+this.speedBtn.h){
+                const speeds = [1/3, 2, 3, 1];
+                const idx = speeds.indexOf(this.speedMult);
+                this.speedMult = speeds[(idx+1)%4];
+                return;
             }
             if(this.moving||this.moveLoading)return;
             const pi=this.turn;
@@ -730,7 +738,7 @@ export class BattleScene {
         const path = `游戏资源/音频/技能音效/${name}.mp3`;
         const a = new Audio(path);
         a.volume = Math.min(1, (this.g.sfxVol || 0.8) * 3);
-        a.playbackRate = fps / 24; // 原视频24fps，游戏中不同技能用不同速度
+        a.playbackRate = (fps / 24) * this.speedMult;
         a.play().catch(() => {});
     }
 
@@ -1236,7 +1244,7 @@ export class BattleScene {
         // 近战动画更新
         if(this.melee && this.melee.active!==false){
             const m = this.melee;
-            const atkFps = m.fps, atkInt = 1000/atkFps;
+            const atkFps = m.fps * this.speedMult, atkInt = 1000/atkFps;
             m.atkTimer += dt*1000;
             // 攻击延迟（盾需提前时，按帧延迟）
             if(m.atkDelay > 0){
@@ -1480,7 +1488,7 @@ export class BattleScene {
             // 死亡动画播放
             if(p.animOverride === 'death'){
                 p.animTimer += dt*1000;
-                const dfps = 120, dfInt = 1000/dfps;
+                const dfps = 120 * this.speedMult, dfInt = 1000/dfps;
                 while(p.animTimer >= dfInt){p.animTimer -= dfInt; if(p.animFrame<121)p.animFrame++;}
                 // 死亡动画收尾：延迟启动结算（让最后一帧展示片刻）
                 if(p.animFrame >= 121 && !this.paused){
@@ -1502,7 +1510,7 @@ export class BattleScene {
             }
             // 技能动画播放（heal/buff/speed/slash等）— 近战动画由melee系统接管
             if(p.animOverride && p.animOverride!=='death' && !(this.melee&&this.melee.active!==false)){
-                const afps = (p.animOverride==='speed'||p.animOverride==='giantSword')?60:120;
+                const afps = ((p.animOverride==='speed'||p.animOverride==='giantSword')?60:120) * this.speedMult;
                 p.animTimer += dt*1000;
                 const afInt = 1000/afps;
                 while(p.animTimer >= afInt){p.animTimer -= afInt; p.animFrame++;}
@@ -1544,7 +1552,7 @@ export class BattleScene {
         if(this.moving){
             const m=this.moving;
             m.timer+=dt*1000;
-            const fInt=1000/m.fps;
+            const fInt=1000/(m.fps * this.speedMult);
             while(m.timer>=fInt){m.timer-=fInt;m.curFrame++;}
             if(m.curFrame>m.totalFrames){
                 const p=this.players[m.pi]; p.pos=m.toV;
@@ -1632,6 +1640,14 @@ export class BattleScene {
             const pb=this.pauseBtn;
             ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(pb.x,pb.y,pb.w,pb.h);
         }
+        // 播放速度按钮（右上角）
+        const sb=this.speedBtn;
+        const labels = {[1/3]:'x⅓',[2]:'x2',[3]:'x3',[1]:'x1'};
+        const smLabel = labels[this.speedMult] || 'x1';
+        ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(sb.x,sb.y,sb.w,sb.h);
+        ctx.strokeStyle='rgba(224,192,112,0.5)';ctx.lineWidth=1.5;ctx.strokeRect(sb.x,sb.y,sb.w,sb.h);
+        ctx.fillStyle='#e0c070';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+        ctx.fillText(smLabel, sb.x+sb.w/2, sb.y+sb.h/2+5);
 
         // 可移动光圈光柱（缓存到离屏canvas，避免大量fillRect卡帧）
         if(!this.moving&&!this.moveLoading&&!this.moved){
