@@ -232,7 +232,7 @@ export class BattleScene {
         if (this.bgLoadIdx >= this.total * 4) return; // 4种动画全加载完
         const keys = ['bg', 'sz', 'fz', 'idle'];
         let loaded = 0;
-        const maxPerTick = 4;
+        const maxPerTick = 8;
         while (loaded < maxPerTick && this.bgLoadIdx < this.total * 4) {
             const keyIdx = this.bgLoadIdx % 4;
             const frameIdx = Math.floor(this.bgLoadIdx / 4) + 1;
@@ -394,12 +394,12 @@ export class BattleScene {
             await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
         }
         this.loadingProgress = 70;
-        // 预热：场景动画前80帧
+        // 预热：场景动画前20帧
         const pad = n => String(n).padStart(5, '0');
         await Promise.all(['bg','sz','fz','idle'].flatMap(k => {
             const dir = this.animPaths[k];
             const tasks = [];
-            for (let n = 2; n <= 80; n++) {
+            for (let n = 2; n <= 20; n++) {
                 const ck = k + n;
                 if (!this.frameCache.has(ck)) {
                     tasks.push(new Promise(r => {
