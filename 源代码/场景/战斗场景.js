@@ -1767,18 +1767,15 @@ export class BattleScene {
         if(this._isMobile && !this.paused && !this.victoryAnim && this.players){
             const pi = this.turn, p = this.players[pi];
             const icon = this.im['普攻'];
-            // 普攻按钮（P1左，P2右，始终可见）
-            if(!p.dead && !p.animOverride && !this.moving && !this.moveLoading){
-                const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
-                if(icon && !this.skillUsed){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
-                if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
-                // 非回合玩家也显示灰色按钮位置提示
-                if(!this.skillUsed){
-                    ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
-                    const ab2 = pi===0 ? this.atkBtn2 : this.atkBtn1;
-                    ctx.strokeRect(ab2.x,ab2.y,ab2.w,ab2.h);
-                    if(icon){ ctx.globalAlpha=0.3; this._draw(ctx, icon, ab2.x, ab2.y, ab2.w, ab2.h); ctx.globalAlpha=1; }
-                }
+            // 普攻按钮 P1（左）始终可见
+            if(icon && !this.skillUsed && !p.dead && !p.animOverride && !this.moving && !this.moveLoading){
+                this._draw(ctx, icon, this.atkBtn1.x, this.atkBtn1.y, this.atkBtn1.w, this.atkBtn1.h);
+                if(pi===0 && this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(this.atkBtn1.x,this.atkBtn1.y,this.atkBtn1.w,this.atkBtn1.h); }
+            }
+            // 普攻按钮 P2（右）始终可见
+            if(icon && !this.skillUsed && !this.players[1].dead && !this.players[1].animOverride && !this.moving && !this.moveLoading){
+                this._draw(ctx, icon, this.atkBtn2.x, this.atkBtn2.y, this.atkBtn2.w, this.atkBtn2.h);
+                if(pi===1 && this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(this.atkBtn2.x,this.atkBtn2.y,this.atkBtn2.w,this.atkBtn2.h); }
             }
             // 结束回合按钮（P1左 P2右，当前回合玩家可见）
             if(!p.dead){
