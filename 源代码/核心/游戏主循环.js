@@ -124,7 +124,7 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 手机半分辨率，桌面全分辨率 */
+    /** 响应式缩放 — 手机半分辨率填充全屏，桌面全分辨率 */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth, ph = parent.clientHeight;
@@ -133,7 +133,9 @@ export class Game {
         // 手机端：半分辨率 960×540（GPU性能优化）
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        const scale = Math.min(pw / iw, ph / ih);
+        // 手机端：拉伸填满全屏，桌面端：保持比例不拉伸
+        const sx = pw / iw, sy = ph / ih;
+        const scale = isMobile ? Math.max(sx, sy) : Math.min(sx, sy);
 
         this.canvas.width = iw;
         this.canvas.height = ih;

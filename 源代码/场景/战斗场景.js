@@ -459,8 +459,9 @@ export class BattleScene {
             this.atkBtn1 = { x:-790.28+this._cx-56.22, y:-395.84+540-56.22, w:112.44, h:112.44 };
             // P2普攻（右，JSON center 794.52,-383.12）
             this.atkBtn2 = { x:794.52+this._cx-56.22, y:-383.12+540-56.22, w:112.44, h:112.44 };
-            // 结束回合按钮（左下方）
-            this.endBtn = { x:this.atkBtn1.x, y:this.atkBtn1.y+112.44+15, w:112.44, h:40 };
+            // 结束回合按钮（P1左 P2右）
+            this.endBtn1 = { x:this.atkBtn1.x, y:this.atkBtn1.y+112.44+10, w:112.44, h:40 };
+            this.endBtn2 = { x:this.atkBtn2.x, y:this.atkBtn2.y+112.44+10, w:112.44, h:40 };
         }
         // 首次进入提示
         if (!localStorage.getItem('qs_speed_tip')) {
@@ -596,9 +597,10 @@ export class BattleScene {
                     return;
                 }
             }
-            // 结束回合（随时可点）
-            if(this._isMobile && this.endBtn){
-                if(x>=this.endBtn.x&&x<=this.endBtn.x+this.endBtn.w&&y>=this.endBtn.y&&y<=this.endBtn.y+this.endBtn.h){
+            // 结束回合（随时可点，P1/P2各自按钮）
+            if(this._isMobile){
+                const eb = pi===0 ? this.endBtn1 : this.endBtn2;
+                if(eb && x>=eb.x&&x<=eb.x+eb.w&&y>=eb.y&&y<=eb.y+eb.h){
                     this.endTurn(); return;
                 }
             }
@@ -652,7 +654,8 @@ export class BattleScene {
                 const pi=this.turn, ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){this._pressed='atk';return;}
             }
-            if(this._isMobile && this.endBtn && x>=this.endBtn.x&&x<=this.endBtn.x+this.endBtn.w&&y>=this.endBtn.y&&y<=this.endBtn.y+this.endBtn.h){this._pressed='end';return;}
+            const ep = pi===0 ? this.endBtn1 : this.endBtn2;
+            if(this._isMobile && ep && x>=ep.x&&x<=ep.x+ep.w&&y>=ep.y&&y<=ep.y+ep.h){this._pressed='end';return;}
             // 技能图标按下（交互框）
             if(!this.skillUsed){const pi=this.turn;
                 for(let si=0;si<4;si++){const h=this.skHit[pi][si];
@@ -1760,19 +1763,26 @@ export class BattleScene {
             ctx.stroke();
         }
 
-        // 手机端专用：普攻按钮 + 结束回合按钮
+        // 手机端专用：普攻按钮 + 结束回合按钮（两个玩家都有）
         if(this._isMobile && !this.paused && !this.victoryAnim && this.players){
             const pi = this.turn, p = this.players[pi];
             const icon = this.im['普攻'];
-            // 普攻（仅回合玩家未用技能时显示，两个玩家不同位置）
-            if(!this.skillUsed && !p.dead && !p.animOverride && !this.moving && !this.moveLoading){
+            // 普攻按钮（P1左，P2右，始终可见）
+            if(!p.dead && !p.animOverride && !this.moving && !this.moveLoading){
                 const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
-                if(icon){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
+                if(icon && !this.skillUsed){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
                 if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
+                // 非回合玩家也显示灰色按钮位置提示
+                if(!this.skillUsed){
+                    ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
+                    const ab2 = pi===0 ? this.atkBtn2 : this.atkBtn1;
+                    ctx.strokeRect(ab2.x,ab2.y,ab2.w,ab2.h);
+                    if(icon){ ctx.globalAlpha=0.3; this._draw(ctx, icon, ab2.x, ab2.y, ab2.w, ab2.h); ctx.globalAlpha=1; }
+                }
             }
-            // 结束回合按钮（回合玩家始终可见）
+            // 结束回合按钮（P1左 P2右，当前回合玩家可见）
             if(!p.dead){
-                const eb = this.endBtn;
+                const eb = pi===0 ? this.endBtn1 : this.endBtn2;
                 ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h);
                 ctx.strokeStyle='rgba(224,192,112,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(eb.x,eb.y,eb.w,eb.h);
                 if(this._pressed==='end'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h); }
