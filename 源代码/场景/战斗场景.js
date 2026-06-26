@@ -450,10 +450,12 @@ export class BattleScene {
                 setTimeout(() => r(), 8000);
             });
             await L('普攻','游戏资源/图像/UI/普攻_透明.png');
-            // 普攻按钮（JSON坐标系: center -790.28,-395.84, size 96.87°96.87）
-            this.atkBtn = { x:-790.28+960-48.435, y:-395.84+540-48.435, w:96.87, h:96.87 };
-            // 结束回合按钮（普攻下方20px）
-            this.endBtn = { x:this.atkBtn.x, y:this.atkBtn.y+96.87+20, w:96.87, h:40 };
+            // P1普攻（左，JSON center -790.28,-395.84, display 112.44×112.44）
+            this.atkBtn1 = { x:-790.28+960-56.22, y:-395.84+540-56.22, w:112.44, h:112.44 };
+            // P2普攻（右，JSON center 794.52,-383.12）
+            this.atkBtn2 = { x:794.52+960-56.22, y:-383.12+540-56.22, w:112.44, h:112.44 };
+            // 结束回合按钮（左下方）
+            this.endBtn = { x:this.atkBtn1.x, y:this.atkBtn1.y+112.44+15, w:112.44, h:40 };
         }
         // 首次进入提示
         if (!localStorage.getItem('qs_speed_tip')) {
@@ -573,14 +575,26 @@ export class BattleScene {
                 return;
             }
             if(this.moving||this.moveLoading)return;
-            // 手机端：普攻/结束回合按钮
-            if(this._isMobile){
-                const ab=this.atkBtn, eb=this.endBtn;
+            // 手机端：普攻/结束回合
+            if(this._isMobile && !this.skillUsed){
+                const pi=this.turn;
+                const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){
-                    this.useSkill(this.turn, 4); return;
+                    const enemy=this.players[1-pi];
+                    if(this._graphDist(this.players[pi].pos, enemy.pos) > 1){
+                        this.hints.push({text:'敌人太远，无法攻击',timer:0,color:'255,100,100'});
+                    } else {
+                        this.useSkill(pi, 4);
+                    }
+                    return;
                 }
-                if(x>=eb.x&&x<=eb.x+eb.w&&y>=eb.y&&y<=eb.y+eb.h){
-                    if(this.skillUsed && this.moved) this.endTurn(); return;
+            }
+            // 结束回合（可随时点）
+            if(this._isMobile && this.endBtn){
+                if(x>=this.endBtn.x&&x<=this.endBtn.x+this.endBtn.w&&y>=this.endBtn.y&&y<=this.endBtn.y+this.endBtn.h){
+                    if(this.skillUsed && this.moved) this.endTurn();
+                    else this.hints.push({text:'请先移动并使用技能',timer:0,color:'255,200,100'});
+                    return;
                 }
             }
             const pi=this.turn;
@@ -629,11 +643,11 @@ export class BattleScene {
             }
             if(this.moving||this.moveLoading)return;
             // 手机端按钮按下反馈
-            if(this._isMobile){
-                const ab=this.atkBtn, eb=this.endBtn;
+            if(this._isMobile && !this.skillUsed){
+                const pi=this.turn, ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){this._pressed='atk';return;}
-                if(x>=eb.x&&x<=eb.x+eb.w&&y>=eb.y&&y<=eb.y+eb.h){this._pressed='end';return;}
             }
+            if(this._isMobile && this.endBtn && x>=this.endBtn.x&&x<=this.endBtn.x+this.endBtn.w&&y>=this.endBtn.y&&y<=this.endBtn.y+this.endBtn.h){this._pressed='end';return;}
             // 技能图标按下（交互框）
             if(!this.skillUsed){const pi=this.turn;
                 for(let si=0;si<4;si++){const h=this.skHit[pi][si];
@@ -1736,19 +1750,24 @@ export class BattleScene {
         }
 
         // 手机端专用：普攻按钮 + 结束回合按钮
-        if(this._isMobile && !this.paused && !this.moving && !this.moveLoading && !this.moved && !this.victoryAnim && this.players && !this.players[this.turn].dead && !this.players[this.turn].animOverride){
-            const ab = this.atkBtn, eb = this.endBtn;
-            // 普攻图标
+        if(this._isMobile && !this.paused && !this.victoryAnim && this.players){
+            const pi = this.turn, p = this.players[pi];
             const icon = this.im['普攻'];
-            if(icon){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
-            // 普攻按下反馈
-            if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
-            // 结束回合按钮
-            ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h);
-            ctx.strokeStyle='rgba(224,192,112,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(eb.x,eb.y,eb.w,eb.h);
-            if(this._pressed==='end'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h); }
-            ctx.fillStyle='#e0c070'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
-            ctx.fillText('结束', eb.x+eb.w/2, eb.y+eb.h/2+5);
+            // 普攻（仅回合玩家未用技能时显示，两个玩家不同位置）
+            if(!this.skillUsed && !p.dead && !p.animOverride && !this.moving && !this.moveLoading){
+                const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
+                if(icon){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
+                if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
+            }
+            // 结束回合按钮（已移动+已用技能时显示）
+            if(!p.dead && this.skillUsed && this.moved){
+                const eb = this.endBtn;
+                ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h);
+                ctx.strokeStyle='rgba(224,192,112,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(eb.x,eb.y,eb.w,eb.h);
+                if(this._pressed==='end'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h); }
+                ctx.fillStyle='#e0c070'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+                ctx.fillText('结束', eb.x+eb.w/2, eb.y+eb.h/2+5);
+            }
         }
 
         // 可移动光圈光柱（缓存到离屏canvas，避免大量fillRect卡帧）
