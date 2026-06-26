@@ -130,9 +130,7 @@ export class Game {
         // 容器client尺寸 = 浏览器内容区域（已排除导航栏等浏览器UI）
         const pw = this.canvas.parentElement.clientWidth;
         const ph = this.canvas.parentElement.clientHeight;
-        const iw = isMobile ? 960 : 1920;
-        const ih = isMobile ? 540 : 1080;
-        // 全分辨率 1920×1080（国内服务器速度快）
+        // 全分辨率 1920×1080
         const iw = 1920;
         const ih = 1080;
         // 填满容器
