@@ -22,7 +22,8 @@ export class BattleScene {
         this.fps = 30; this.total = 121;
         this._gameTime = 0;
         this._lastGoodFrame = {};
-        this.loadingProgress = 0; // 加载进度条 0-100
+        this.loadingProgress = 0;
+        this._vicLoadIdx = 1; // 结算帧后台懒加载索引
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -351,28 +352,9 @@ export class BattleScene {
             L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
             L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
         ]);
-        this.loadingProgress = 30;
-        // 预加载最终结算关键帧（前30帧，播完前1秒再补剩余）
-        const vicDir = this.victoryFrameDir;
-        const pad5 = n => String(n).padStart(5,'0');
-        const vicPreload = [];
-        for (let batch = 1; batch <= 30; batch += 20) {
-            const end = Math.min(batch + 19, 30);
-            const tasks = [];
-            for (let n = batch; n <= end; n++) {
-                tasks.push(new Promise(r=>{
-                    const img = new Image();
-                    img.onload=()=>{this.frameCache.set('vicFinal'+n,img);r();};
-                    img.onerror=()=>r();
-                    img.src=`${vicDir}/frame_${pad5(n)}.png`;
-                }));
-            }
-            await Promise.all(tasks);
-            this.loadingProgress = 30 + Math.round((end/30)*15);
-        }
+        this.loadingProgress = 35;
         // ═══ 雪碧图按需加载：只加载玩家选中的技能所需动画 ═══
         this.useSprite = true;
-        this.loadingProgress = 45;
         const baseKeys = ['walk','jump','drop','float','death'];
         // bg/sz/fz/idle 不用雪碧图 — GPU 纹理采样开销远超独立 PNG
         const skillAnimMap = {
@@ -393,7 +375,7 @@ export class BattleScene {
         for (const k of needed) {
             await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
         }
-        this.loadingProgress = 70;
+        this.loadingProgress = 55;
         // 预热：场景动画前20帧
         const pad = n => String(n).padStart(5, '0');
         await Promise.all(['bg','sz','fz','idle'].flatMap(k => {
@@ -412,7 +394,7 @@ export class BattleScene {
             }
             return tasks;
         }));
-        this.loadingProgress = 85;
+        this.loadingProgress = 70;
         // 预加载当前对局需要的音效和配音
         const audioPreload = [];
         const sfxDir = '游戏资源/音频/技能音效';
@@ -453,13 +435,14 @@ export class BattleScene {
             }));
         }
         await Promise.all(audioPreload).catch(() => {});
-        this.loadingProgress = 95;
+        this.loadingProgress = 85;
         // GPU预热：强制创建buff/buffIdle的雪碧图描述符，避免首次绘制时GPU纹理上传卡顿
         if(this.useSprite){
             for(const k of ['buff','buffIdle']){
                 if(this.sprite.has(k)) this._getFrame(k, 1);
             }
         }
+        this.loadingProgress = 95;
         this.ok = true;
 
         // 初始化位置数据
@@ -1479,6 +1462,20 @@ export class BattleScene {
         this._loadFrame('sz', ((fi%this.total)+1));
         this._loadFrame('fz', ((fi%this.total)+1));
         this._loadFrame('idle', ((fi%this.total)+1));
+        // 后台懒加载结算动画帧（每帧3张，不占加载界面时间）
+        if(this._vicLoadIdx <= 121){
+            const pad5 = n => String(n).padStart(5,'0');
+            for(let i=0;i<3 && this._vicLoadIdx<=121;i++,this._vicLoadIdx++){
+                const n = this._vicLoadIdx;
+                const ck = 'vicFinal'+n;
+                if(!this.frameCache.has(ck)){
+                    const img = new Image();
+                    img.onload = () => this.frameCache.set(ck, img);
+                    img.onerror = () => {};
+                    img.src = `${this.victoryFrameDir}/frame_${pad5(n)}.png`;
+                }
+            }
+        }
 
         // 血条插值 + 死亡检测
         for(const p of this.players){
