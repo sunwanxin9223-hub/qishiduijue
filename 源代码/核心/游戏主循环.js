@@ -49,11 +49,6 @@ export class Game {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        // 手机端监听可视区域变化（键盘弹出/收起、浏览器UI变化）
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => this.resize());
-            window.visualViewport.addEventListener('scroll', () => this.resize());
-        }
         // BGM 初始化
         this._initBgm();
     }
@@ -129,29 +124,16 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 手机半分辨率适配可视区域，桌面全分辨率 */
+    /** 响应式缩放 — 手机半分辨率，桌面全分辨率 */
     resize() {
         const isMobile = window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024);
-        // 手机端用 visualViewport 获取真正可视区域（排除地址栏/底部栏/键盘）
-        const vv = window.visualViewport;
-        const pw = isMobile && vv ? vv.width : window.innerWidth;
-        const ph = isMobile && vv ? vv.height : window.innerHeight;
+        // 容器client尺寸 = 浏览器内容区域（已排除导航栏等浏览器UI）
+        const pw = this.canvas.parentElement.clientWidth;
+        const ph = this.canvas.parentElement.clientHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
+        // 保持比例缩放到能完整显示在可视区域内
         const scale = Math.min(pw / iw, ph / ih);
-
-        // 手机端：强制容器和canvas精确适配可视viewport
-        const container = this.canvas.parentElement;
-        if (isMobile && vv) {
-            container.style.position = 'fixed';
-            container.style.left = '0px';
-            container.style.top = '0px';
-            container.style.width = vv.width + 'px';
-            container.style.height = vv.height + 'px';
-            container.style.display = 'flex';
-            container.style.alignItems = 'center';
-            container.style.justifyContent = 'center';
-        }
 
         this.canvas.width = iw;
         this.canvas.height = ih;
