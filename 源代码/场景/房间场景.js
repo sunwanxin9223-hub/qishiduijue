@@ -72,7 +72,7 @@ export class RoomScene {
         cv.addEventListener('click', this._cl);
         cv.addEventListener('mousedown', this._md); cv.addEventListener('mouseup', this._mu);
         this._ts = e => { this._md(e.touches[0]); };
-        this._te = e => { this._mu(); };
+        this._te = e => { this._mu(); this._cl(e.changedTouches[0]); };
         cv.addEventListener('touchstart', this._ts, {passive: false});
         cv.addEventListener('touchend', this._te);
         cv.addEventListener('touchcancel', this._te);

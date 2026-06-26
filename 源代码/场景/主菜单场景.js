@@ -78,7 +78,7 @@ export class MenuScene {
         // 移动端触摸
         this._ts = e => { this._md(e.touches[0]); };
         this._tm = e => { e.preventDefault(); this._mm(e.touches[0]); };
-        this._te = e => { this._mu(); };
+        this._te = e => { this._mu(); this._cl(e.changedTouches[0]); };
         cv.addEventListener('touchstart', this._ts, {passive: false});
         cv.addEventListener('touchmove', this._tm, {passive: false});
         cv.addEventListener('touchend', this._te);
