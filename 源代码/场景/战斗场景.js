@@ -447,6 +447,7 @@ export class BattleScene {
             const L = (k, u) => new Promise(r => {
                 const i = new Image(); i.onload = () => { this.im[k] = i; r(); };
                 i.onerror = () => r(); i.src = u;
+                setTimeout(() => r(), 8000);
             });
             await L('普攻','游戏资源/图像/UI/普攻_透明.png');
             // 普攻按钮（JSON坐标系: center -790.28,-395.84, size 96.87°96.87）
