@@ -102,6 +102,9 @@ export class MenuScene {
     render(ctx){
         ctx.fillStyle='#000';ctx.fillRect(0,0,this.w,this.h);
         if(!this.ok){this.renderLoading(ctx);return;}
+        // 背景图未加载完→继续显示加载
+        const bgImg = this.im[this.bgKey];
+        if(!bgImg||bgImg.naturalWidth===0){this.renderLoading(ctx);return;}
         for(const l of this.layers){const img=this.im[l.i];if(img&&img.naturalWidth>0)ctx.drawImage(img,l.x,l.y,l.w,l.h);}
         if(this.hv||this._pressed){const b=this.btns.find(b=>b.id===this.hv||b.id===this._pressed);if(b){
             const press=this._pressed===b.id;

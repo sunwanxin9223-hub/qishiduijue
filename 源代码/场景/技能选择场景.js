@@ -113,6 +113,8 @@ export class SkillSelectScene {
     render(ctx) {
         ctx.fillStyle='#000';ctx.fillRect(0,0,this.w,this.h);
         if(!this.ok){this.renderLoading(ctx);return;}
+        // 背景图未加载完→继续显示加载
+        if(!this.im['bg']||this.im['bg'].naturalWidth===0){this.renderLoading(ctx);return;}
 
         // 背景
         const bg=this.im['bg'];if(bg&&bg.naturalWidth>0)ctx.drawImage(bg,this.bg.x,this.bg.y,this.bg.w,this.bg.h);
