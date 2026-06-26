@@ -347,16 +347,23 @@ export class BattleScene {
             L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
             L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
         ]);
-        // 预加载最终结算关键帧（直接路径加载）
+        // 预加载最终结算关键帧（全部121帧，分批避免阻塞）
         const vicDir = this.victoryFrameDir;
         const pad5 = n => String(n).padStart(5,'0');
-        const vicPreload = [1,30,60,90,121].map(n => new Promise(r=>{
-            const img = new Image();
-            img.onload=()=>{this.frameCache.set('vicFinal'+n,img);r();};
-            img.onerror=()=>r();
-            img.src=`${vicDir}/frame_${pad5(n)}.png`;
-        }));
-        await Promise.all(vicPreload);
+        const vicPreload = [];
+        for (let batch = 1; batch <= 121; batch += 20) {
+            const end = Math.min(batch + 19, 121);
+            const tasks = [];
+            for (let n = batch; n <= end; n++) {
+                tasks.push(new Promise(r=>{
+                    const img = new Image();
+                    img.onload=()=>{this.frameCache.set('vicFinal'+n,img);r();};
+                    img.onerror=()=>r();
+                    img.src=`${vicDir}/frame_${pad5(n)}.png`;
+                }));
+            }
+            await Promise.all(tasks);
+        }
         // ═══ 雪碧图按需加载：只加载玩家选中的技能所需动画 ═══
         this.useSprite = true;
         const baseKeys = ['walk','jump','drop','float','death'];
