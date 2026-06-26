@@ -132,7 +132,10 @@ export class Game {
         const ph = this.canvas.parentElement.clientHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        // 手机端拉伸填满容器，桌面端保持比例
+        // 全分辨率 1920×1080（国内服务器速度快）
+        const iw = 1920;
+        const ih = 1080;
+        // 填满容器
         this.canvas.width = iw;
         this.canvas.height = ih;
         if (isMobile) {
@@ -145,7 +148,7 @@ export class Game {
             this.canvas.style.height = Math.floor(ih * scale) + 'px';
             this.scale = scale;
         }
-        this._halfRes = isMobile;
+        this._halfRes = false;
         this.ctx.imageSmoothingEnabled = false;
     }
 
