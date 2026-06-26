@@ -535,7 +535,7 @@ export class BattleScene {
                 this.g.playClick();this.paused=!0;this.showSettings=!1;return;
             }
             if(x>=this.speedBtn.x&&x<=this.speedBtn.x+this.speedBtn.w&&y>=this.speedBtn.y&&y<=this.speedBtn.y+this.speedBtn.h){
-                const speeds = [1/3, 2, 3, 1];
+                const speeds = [1/3, 2/3, 1];
                 const idx = speeds.indexOf(this.speedMult);
                 this.speedMult = speeds[(idx+1)%4];
                 return;
@@ -1642,7 +1642,7 @@ export class BattleScene {
         }
         // 播放速度按钮（右上角）
         const sb=this.speedBtn;
-        const labels = {[1/3]:'x⅓',[2]:'x2',[3]:'x3',[1]:'x1'};
+        const labels = {[1/3]:'x1',[2/3]:'x2',[1]:'x3'};
         const smLabel = labels[this.speedMult] || 'x1';
         ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(sb.x,sb.y,sb.w,sb.h);
         ctx.strokeStyle='rgba(224,192,112,0.5)';ctx.lineWidth=1.5;ctx.strokeRect(sb.x,sb.y,sb.w,sb.h);
