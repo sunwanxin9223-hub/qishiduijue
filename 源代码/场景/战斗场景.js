@@ -418,12 +418,20 @@ export class BattleScene {
         for (const fn of neededVoice) allAudio.push(`${voiceDir}/${fn}.mp3`);
         for (const url of allAudio) {
             audioTasks.push(new Promise(r => {
-                fetch(url).then(res => res.blob()).then(() => r()).catch(() => r());
-                setTimeout(() => r(), 5000);
+                const a = new Audio();
+                a.preload = 'auto';
+                a.oncanplaythrough = () => r();
+                a.onerror = () => r();
+                a.src = url;
+                a.load();
+                setTimeout(() => r(), 3000);
             }));
         }
-        // 三路并行：场景帧 + 结算帧 + 音效
-        await Promise.all([...sceneTasks, ...vicTasks, ...audioTasks]);
+        // 三路并行 + 超时保护（最长等30秒）
+        await Promise.race([
+            Promise.all([...sceneTasks, ...vicTasks, ...audioTasks]),
+            new Promise(r => setTimeout(r, 30000))
+        ]);
         this.loadingProgress = 80;
         this.ok = true;
         // 后台异步加载：音效、配音、胜利结算图、冻结图（不阻塞游戏启动）
