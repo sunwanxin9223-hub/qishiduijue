@@ -21,7 +21,8 @@ export class BattleScene {
         this._prevPos = ['',''];
         this.fps = 30; this.total = 121;
         this._gameTime = 0;
-        this._lastGoodFrame = {}; // 场景帧fallback — 当前帧加载中时用上一帧
+        this._lastGoodFrame = {};
+        this.loadingProgress = 0; // 加载进度条 0-100
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -328,6 +329,7 @@ export class BattleScene {
             img.src = `${dir}/frame_${pad(num)}.png`;
         });
 
+        this.loadingProgress = 5;
         await Promise.all([
             L('地面', '游戏资源/图像/场景/地面.png'),
             L('平台', '游戏资源/图像/场景/平台_透明.png'),
@@ -337,16 +339,19 @@ export class BattleScene {
             LF('heal', 1), LF('death', 1), LF('buff', 1), LF('buffIdle', 1), LF('speed', 1), LF('slash', 1),
             LF('meleeSlash', 1), LF('meleeChop', 1), LF('buffAttack', 1), LF('giantSword', 1), LF('hitReact', 1), LF('shield', 1),
         ]);
+        this.loadingProgress = 15;
         // 加载技能图标
         const allSkills = [...new Set([...this.skills1, ...this.skills2, '回血'])];
         const iconTasks = allSkills.map(s => L('sk_'+s, `游戏资源/图像/UI/${s}1_透明.png`));
         await Promise.all(iconTasks);
+        this.loadingProgress = 25;
         // 预加载胜利结算图
         await Promise.all([
             L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.png'),
             L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
             L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
         ]);
+        this.loadingProgress = 30;
         // 预加载最终结算关键帧（全部121帧，分批避免阻塞）
         const vicDir = this.victoryFrameDir;
         const pad5 = n => String(n).padStart(5,'0');
@@ -363,9 +368,11 @@ export class BattleScene {
                 }));
             }
             await Promise.all(tasks);
+            this.loadingProgress = 30 + Math.round((end/121)*25);
         }
         // ═══ 雪碧图按需加载：只加载玩家选中的技能所需动画 ═══
         this.useSprite = true;
+        this.loadingProgress = 55;
         const baseKeys = ['walk','jump','drop','float','death'];
         // bg/sz/fz/idle 不用雪碧图 — GPU 纹理采样开销远超独立 PNG
         const skillAnimMap = {
@@ -386,7 +393,8 @@ export class BattleScene {
         for (const k of needed) {
             await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
         }
-        // 预热：场景动画前10帧
+        this.loadingProgress = 70;
+        // 预热：场景动画前80帧
         const pad = n => String(n).padStart(5, '0');
         await Promise.all(['bg','sz','fz','idle'].flatMap(k => {
             const dir = this.animPaths[k];
@@ -404,6 +412,7 @@ export class BattleScene {
             }
             return tasks;
         }));
+        this.loadingProgress = 85;
         // 预加载所有音效和配音，避免首次播放的网络延迟
         const audioPreload = [];
         const sfxDir = '游戏资源/音频/技能音效';
@@ -427,6 +436,7 @@ export class BattleScene {
             }));
         }
         await Promise.all(audioPreload).catch(() => {});
+        this.loadingProgress = 95;
         // GPU预热：强制创建buff/buffIdle的雪碧图描述符，避免首次绘制时GPU纹理上传卡顿
         if(this.useSprite){
             for(const k of ['buff','buffIdle']){
@@ -2256,16 +2266,50 @@ export class BattleScene {
     renderLoading(ctx){
         const t=Date.now();
         ctx.fillStyle='#0a0a15';ctx.fillRect(0,0,this.w,this.h);
+        // 标题
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold 48px sans-serif';
+        ctx.textAlign='center';ctx.fillText('骑士对决',960,430);
+        // 转圈粒子
         for(let i=0;i<8;i++){
             const a=i/8*Math.PI*2+t/2000;
             const p=0.3+0.3*Math.sin(t/300+i);
             ctx.fillStyle=`rgba(224,192,112,${p})`;
-            ctx.beginPath();ctx.arc(960+Math.cos(a)*60,540+Math.sin(a)*60,5+p*2,0,Math.PI*2);ctx.fill();
+            ctx.beginPath();ctx.arc(960+Math.cos(a)*60,500+Math.sin(a)*60,5+p*2,0,Math.PI*2);ctx.fill();
         }
-        ctx.font='bold 28px sans-serif';ctx.textAlign='center';
-        ctx.fillStyle='#e0c070';ctx.fillText('加载中'+'.'.repeat(Math.floor(t/400)%4),960,620);
-        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold 48px sans-serif';
-        ctx.fillText('骑士对决',960,500);
+        ctx.fillStyle='#e0c070';ctx.font='bold 24px sans-serif';
+        ctx.fillText('加载中'+'.'.repeat(Math.floor(t/400)%4),960,570);
+        // 进度条
+        const pct = this.loadingProgress || 0;
+        const bx = 660, by = 600, bw = 600, bh = 18, br = 9;
+        // 底色
+        ctx.fillStyle='rgba(255,255,255,0.08)';
+        ctx.beginPath();ctx.moveTo(bx+br,by);ctx.lineTo(bx+bw-br,by);
+        ctx.arcTo(bx+bw,by,bx+bw,by+bh,br);ctx.lineTo(bx+bw,by+bh-br);
+        ctx.arcTo(bx+bw,by+bh,bx+bw-br,by+bh,br);ctx.lineTo(bx+br,by+bh);
+        ctx.arcTo(bx,by+bh,bx,by+bh-br,br);ctx.lineTo(bx,by+br);
+        ctx.arcTo(bx,by,bx+br,by,br);ctx.fill();
+        // 进度填充 (带渐变色)
+        const fw = Math.max(br*2, (pct/100)*(bw-4));
+        if(pct>0){
+            const pg = ctx.createLinearGradient(bx,by,bx+bw,by);
+            pg.addColorStop(0,'#c89a3c');pg.addColorStop(1,'#e0c070');
+            ctx.fillStyle=pg;
+            ctx.beginPath();ctx.moveTo(bx+2+br,by+2);ctx.lineTo(bx+2+fw-br,by+2);
+            ctx.arcTo(bx+2+fw,by+2,bx+2+fw,by+bh-2,br);ctx.lineTo(bx+2+fw,by+bh-2-br);
+            ctx.arcTo(bx+2+fw,by+bh-2,bx+2+fw-br,by+bh-2,br);ctx.lineTo(bx+2+br,by+bh-2);
+            ctx.arcTo(bx+2,by+bh-2,bx+2,by+bh-2-br,br);ctx.lineTo(bx+2,by+2+br);
+            ctx.arcTo(bx+2,by+2,bx+2+br,by+2,br);ctx.fill();
+        }
+        // 边框
+        ctx.strokeStyle='rgba(224,192,112,0.4)';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(bx+br,by);ctx.lineTo(bx+bw-br,by);
+        ctx.arcTo(bx+bw,by,bx+bw,by+bh,br);ctx.lineTo(bx+bw,by+bh-br);
+        ctx.arcTo(bx+bw,by+bh,bx+bw-br,by+bh,br);ctx.lineTo(bx+br,by+bh);
+        ctx.arcTo(bx,by+bh,bx,by+bh-br,br);ctx.lineTo(bx,by+br);
+        ctx.arcTo(bx,by,bx+br,by,br);ctx.stroke();
+        // 百分比文字
+        ctx.fillStyle='#e0c070';ctx.font='bold 14px sans-serif';
+        ctx.fillText(pct+'%',960,638);
     }
     destroy(){
         const c=this.g.canvas;
