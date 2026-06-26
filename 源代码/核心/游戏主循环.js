@@ -47,10 +47,6 @@ export class Game {
         }
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
-        // Canvas渲染自检：画红框确认画布可用
-        this.ctx.fillStyle = '#400'; this.ctx.fillRect(0, 0, 100, 100);
-        this.ctx.fillStyle = '#fff'; this.ctx.font = '20px sans-serif';
-        this.ctx.fillText('canvas ok', 120, 50);
         this.resize();
         window.addEventListener('resize', () => this.resize());
         // BGM 初始化
