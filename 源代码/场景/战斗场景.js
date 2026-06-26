@@ -383,7 +383,7 @@ export class BattleScene {
         await Promise.all(['bg','sz','fz','idle'].flatMap(k => {
             const dir = this.animPaths[k];
             const tasks = [];
-            for (let n = 2; n <= 40; n++) {
+            for (let n = 2; n <= 80; n++) {
                 const ck = k + n;
                 if (!this.frameCache.has(ck)) {
                     tasks.push(new Promise(r => {
@@ -396,6 +396,29 @@ export class BattleScene {
             }
             return tasks;
         }));
+        // 预加载所有音效和配音，避免首次播放的网络延迟
+        const audioPreload = [];
+        const sfxDir = '游戏资源/音频/技能音效';
+        const voiceDir = '游戏资源/音频/人物配音/放技能';
+        for (const fn of ['walk','jump','drop','float','heal','death','buff','buffAttack','slash','speed','meleeSlash','meleeChop','hitReact','shield','poisonBlade','flameBlade','laser','thunder','giantSword','victory']) {
+            audioPreload.push(new Promise(r => {
+                const a = new Audio(`${sfxDir}/${fn}.mp3`);
+                a.preload = 'auto'; a.load();
+                a.oncanplaythrough = () => r();
+                a.onerror = () => r();
+                setTimeout(() => r(), 3000); // 3秒超时
+            }));
+        }
+        for (const fn of ['冰冻','回血','巨剑术','强化','淬毒刃','激光','烈焰斩','神速','隐身','震雷枪']) {
+            audioPreload.push(new Promise(r => {
+                const a = new Audio(`${voiceDir}/${fn}.mp3`);
+                a.preload = 'auto'; a.load();
+                a.oncanplaythrough = () => r();
+                a.onerror = () => r();
+                setTimeout(() => r(), 3000);
+            }));
+        }
+        await Promise.all(audioPreload).catch(() => {});
         this.ok = true;
 
         // 初始化位置数据
