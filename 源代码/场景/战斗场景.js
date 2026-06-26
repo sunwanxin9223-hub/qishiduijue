@@ -386,9 +386,9 @@ export class BattleScene {
             }
             return tasks;
         }));
-        // 结算动画前10帧（与场景帧并行）
+        // 结算动画前10帧
         const vicPad = n => String(n).padStart(5,'0');
-        await Promise.all([...Array(10)].map((_,i) => {
+        const vicTasks = [...Array(10)].map((_,i) => {
             const n = i+1, ck = 'vicFinal'+n;
             return new Promise(r => {
                 const img = new Image();
@@ -396,7 +396,34 @@ export class BattleScene {
                 img.onerror = () => r();
                 img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.png`;
             });
-        }));
+        });
+        // 音效配音（与场景/结算并行）
+        const audioTasks = [];
+        const sfxDir = '游戏资源/音频/技能音效';
+        const voiceDir = '游戏资源/音频/人物配音/放技能';
+        const baseSfx = ['walk','jump','drop','float','death','hitReact','shield','victory'];
+        const skillSfxMap = {
+            回血:['heal'],强化:['buff','buffAttack'],无敌之盾:['shield'],神速:['speed'],
+            隐身面具:[],冰冻:['slash'],淬毒刃:['poisonBlade','meleeSlash'],
+            烈焰斩:['flameBlade','meleeSlash'],激光:['laser','meleeSlash'],
+            震雷枪:['thunder','meleeSlash','meleeChop'],巨剑术:['giantSword'],
+            普攻:['meleeSlash','meleeChop'],
+        };
+        const neededSfx = new Set(baseSfx);
+        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
+            const sfx = skillSfxMap[s]; if (sfx) sfx.forEach(x => neededSfx.add(x));
+        }
+        const neededVoice = new Set([...this.skills1, ...this.skills2]);
+        const allAudio = [...neededSfx].map(fn => `${sfxDir}/${fn}.mp3`);
+        for (const fn of neededVoice) allAudio.push(`${voiceDir}/${fn}.mp3`);
+        for (const url of allAudio) {
+            audioTasks.push(new Promise(r => {
+                fetch(url).then(res => res.blob()).then(() => r()).catch(() => r());
+                setTimeout(() => r(), 5000);
+            }));
+        }
+        // 三路并行：场景帧 + 结算帧 + 音效
+        await Promise.all([...sceneTasks, ...vicTasks, ...audioTasks]);
         this.loadingProgress = 80;
         this.ok = true;
         // 后台异步加载：音效、配音、胜利结算图、冻结图（不阻塞游戏启动）
@@ -2221,42 +2248,18 @@ export class BattleScene {
         if(s)ctx.stroke();else ctx.fill();
     }
 
-    /** 后台延迟加载：音效、配音、结算图、冻结图（不阻塞游戏启动） */
+    /** 后台延迟加载：结算大图、冻结图、剩余结算帧 */
     async _deferredLoad(){
         const L = (k, u) => new Promise(r => {
             const i = new Image(); i.onload = () => { this.im[k] = i; r(); };
             i.onerror = () => r(); i.src = u;
         });
-        // 结算图 + 冻结图
         await Promise.all([
             L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.png'),
             L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
             L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
         ]);
-        // 音效 + 配音（分批，不抢渲染带宽）
-        const sfxDir = '游戏资源/音频/技能音效';
-        const voiceDir = '游戏资源/音频/人物配音/放技能';
-        const baseSfx = ['walk','jump','drop','float','death','hitReact','shield','victory'];
-        const skillSfxMap = {
-            回血:['heal'],强化:['buff','buffAttack'],无敌之盾:['shield'],神速:['speed'],
-            隐身面具:[],冰冻:['slash'],淬毒刃:['poisonBlade','meleeSlash'],
-            烈焰斩:['flameBlade','meleeSlash'],激光:['laser','meleeSlash'],
-            震雷枪:['thunder','meleeSlash','meleeChop'],巨剑术:['giantSword'],
-            普攻:['meleeSlash','meleeChop'],
-        };
-        const neededSfx = new Set(baseSfx);
-        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
-            const sfx = skillSfxMap[s]; if (sfx) sfx.forEach(x => neededSfx.add(x));
-        }
-        const allAudio = [...neededSfx].map(fn => `${sfxDir}/${fn}.mp3`);
-        const neededVoice = new Set([...this.skills1, ...this.skills2]);
-        for (const fn of neededVoice) allAudio.push(`${voiceDir}/${fn}.mp3`);
-        // 用 fetch 预缓存到浏览器 HTTP 缓存
-        for (const url of allAudio) {
-            fetch(url).then(r => r.blob()).catch(() => {});
-            await new Promise(r => setTimeout(r, 50));
-        }
-        // 结算帧剩余（11-121）也在后台补齐
+        // 结算帧剩余 11-121
         const vicPad = n => String(n).padStart(5,'0');
         for (let n = 11; n <= 121; n++) {
             const ck = 'vicFinal'+n;
