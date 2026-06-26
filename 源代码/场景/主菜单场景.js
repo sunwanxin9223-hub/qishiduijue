@@ -75,6 +75,14 @@ export class MenuScene {
         this._mu=()=>{this.sliderDrag=null;this._pressed=null;};
         cv.addEventListener('mousemove',this._mm);cv.addEventListener('click',this._cl);
         cv.addEventListener('mousedown',this._md);cv.addEventListener('mouseup',this._mu);
+        // 移动端触摸
+        this._ts = e => { e.preventDefault(); this._md(e.touches[0]); };
+        this._tm = e => { e.preventDefault(); this._mm(e.touches[0]); };
+        this._te = e => { e.preventDefault(); this._mu(); };
+        cv.addEventListener('touchstart', this._ts);
+        cv.addEventListener('touchmove', this._tm);
+        cv.addEventListener('touchend', this._te);
+        cv.addEventListener('touchcancel', this._te);
     }
 
     sClick(x,y){
@@ -190,5 +198,5 @@ export class MenuScene {
         ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold 48px sans-serif';ctx.fillText('骑士对决',960,500);
     }
 
-    destroy(){const c=this.g.canvas;c.style.cursor='default';if(this._mm)c.removeEventListener('mousemove',this._mm);if(this._cl)c.removeEventListener('click',this._cl);if(this._md)c.removeEventListener('mousedown',this._md);if(this._mu)c.removeEventListener('mouseup',this._mu);}
+    destroy(){const c=this.g.canvas;c.style.cursor='default';if(this._mm)c.removeEventListener('mousemove',this._mm);if(this._cl)c.removeEventListener('click',this._cl);if(this._md)c.removeEventListener('mousedown',this._md);if(this._mu)c.removeEventListener('mouseup',this._mu);if(this._ts)c.removeEventListener('touchstart',this._ts);if(this._tm)c.removeEventListener('touchmove',this._tm);if(this._te){c.removeEventListener('touchend',this._te);c.removeEventListener('touchcancel',this._te);}}
 }

@@ -618,6 +618,14 @@ export class BattleScene {
         cv.addEventListener('mousemove',this._mm);
         cv.addEventListener('mouseup',this._mu);
         cv.addEventListener('mousedown',this._md);
+        // 移动端触摸支持
+        this._ts = e => { e.preventDefault(); this._md(e.touches[0]); };
+        this._tm = e => { e.preventDefault(); this._mm(e.touches[0]); };
+        this._te = e => { e.preventDefault(); this._mu(); };
+        cv.addEventListener('touchstart', this._ts);
+        cv.addEventListener('touchmove', this._tm);
+        cv.addEventListener('touchend', this._te);
+        cv.addEventListener('touchcancel', this._te);
         // Enter换回合 + 技能按键
         this._kd = (e) => {
             if(this.paused||this.moving||this.moveLoading)return;
@@ -2411,6 +2419,10 @@ export class BattleScene {
         if(this._mu)c.removeEventListener('mouseup',this._mu);
         if(this._md)c.removeEventListener('mousedown',this._md);
         if(this._kd)window.removeEventListener('keydown',this._kd);
+        if(this._ts)c.removeEventListener('touchstart',this._ts);
+        if(this._tm)c.removeEventListener('touchmove',this._tm);
+        if(this._te)c.removeEventListener('touchend',this._te);
+        if(this._te)c.removeEventListener('touchcancel',this._te);
         // 清理帧缓存释放内存
         this.frameCache.clear();
         this.tilePattern = null;

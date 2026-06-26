@@ -71,6 +71,11 @@ export class RoomScene {
         this._mu = () => { this._pressed=null; };
         cv.addEventListener('click', this._cl);
         cv.addEventListener('mousedown', this._md); cv.addEventListener('mouseup', this._mu);
+        this._ts = e => { e.preventDefault(); this._md(e.touches[0]); };
+        this._te = e => { e.preventDefault(); this._mu(); };
+        cv.addEventListener('touchstart', this._ts);
+        cv.addEventListener('touchend', this._te);
+        cv.addEventListener('touchcancel', this._te);
     }
 
     createRoom() { this.isHost = true; this.roomCode = String(Math.floor(1000 + Math.random() * 9000)); this.showAnim = true; this.currentFrame = 0; setTimeout(() => this.g.switchScene('技能选择', { mode: '好友对战', role: '房主' }), 3000); }
@@ -178,5 +183,5 @@ export class RoomScene {
         ctx.fillStyle = '#e0c070'; ctx.font = '28px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('加载中' + '.'.repeat(Math.floor(t / 400) % 4), 960, 620);
     }
 
-    destroy() { const c = this.g.canvas; if (this._cl) c.removeEventListener('click', this._cl); if (this._kd) window.removeEventListener('keydown', this._kd); if (this._md) c.removeEventListener('mousedown', this._md); if (this._mu) c.removeEventListener('mouseup', this._mu); }
+    destroy() { const c = this.g.canvas; if (this._cl) c.removeEventListener('click', this._cl); if (this._kd) window.removeEventListener('keydown', this._kd); if (this._md) c.removeEventListener('mousedown', this._md); if (this._mu) c.removeEventListener('mouseup', this._mu); if(this._ts) c.removeEventListener('touchstart', this._ts); if(this._te){ c.removeEventListener('touchend', this._te); c.removeEventListener('touchcancel', this._te); } }
 }
