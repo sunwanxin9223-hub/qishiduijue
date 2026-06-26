@@ -32,7 +32,7 @@ export class BattleScene {
         this._isMobile = false; // 手机端检测
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
-        this._beamCvs.width = this.w; this._beamCvs.height = this._cy; // 尺寸固定
+        this._beamCvs.width = this.w; this._beamCvs.height = 1080; // 尺寸固定
         this.pingpongSeq = [];
         for(let i=1;i<=120;i++)this.pingpongSeq.push(i);
         for(let i=121;i>=2;i--)this.pingpongSeq.push(i);
@@ -528,7 +528,7 @@ export class BattleScene {
     setupScene(){
         const A=(tx,ty,w,h)=>({x:tx+this._cx,y:ty+540,w,h});
         this.scene=[
-            {t:'pp',k:'bg',...A(-this._cx,-540,this.w,this._cy),o:15},
+            {t:'pp',k:'bg',...A(-this._cx,-540,this.w,1080),o:15},
             {t:'img',k:'地面',...A(-953.62,460.75,1910,70.26),o:14,til:true,tbW:41,tbH:41},
             {t:'lp',k:'fz',...A(689.41,-194.32,288.86,779.26),o:13},
             {t:'lp',k:'sz',...A(150.76,-347.97,845.93,663.26),o:12},
@@ -2057,7 +2057,7 @@ export class BattleScene {
                 ctx.shadowColor='#ffd700';ctx.shadowBlur=4;
                 ctx.fillStyle='rgba(255,255,255,0.95)';this.rr(ctx,px,py,pw,ph,8);
                 ctx.shadowBlur=0;
-                ctx.fillStyle='#c8this._cxa';ctx.fillText(p.label,lx,ly-1);
+                ctx.fillStyle='#c8960a';ctx.fillText(p.label,lx,ly-1);
                 ctx.fillStyle='#ffd700';ctx.fillText(p.label,lx,ly);
             } else {
                 // 未轮到：暗底灰字
@@ -2390,7 +2390,7 @@ export class BattleScene {
         ctx.fillStyle=fg;this.rr(ctx,x,by,w*val,10,5);
         const hx=x+w*val, hy=y+h/2;
         const grd=ctx.createRadialGradient(hx-2,hy-2,2,hx,hy,12);
-        grd.addColorStop(0,'#fff8dc');grd.addColorStop(0.5,'#ffd700');grd.addColorStop(1,'#b8this._cxa');
+        grd.addColorStop(0,'#fff8dc');grd.addColorStop(0.5,'#ffd700');grd.addColorStop(1,'#b8960a');
         ctx.fillStyle=grd;ctx.beginPath();ctx.arc(hx,hy,12,0,Math.PI*2);ctx.fill();
         ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(hx,hy,12,0,Math.PI*2);ctx.stroke();
     }
