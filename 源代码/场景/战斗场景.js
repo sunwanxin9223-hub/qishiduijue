@@ -23,6 +23,8 @@ export class BattleScene {
         this._gameTime = 0;
         this._lastGoodFrame = {};
         this.loadingProgress = 0;
+        this._lastProgressTime = Date.now();
+        this._lastRealPct = 0;
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -2299,8 +2301,16 @@ export class BattleScene {
         }
         ctx.fillStyle='#e0c070';ctx.font='bold 24px sans-serif';
         ctx.fillText('加载中'+'.'.repeat(Math.floor(t/400)%4),960,570);
-        // 进度条
-        const pct = this.loadingProgress || 0;
+        // 进度条 — 假进度：超过10秒无更新则自动蠕动
+        let pct = this.loadingProgress || 0;
+        const realPct = pct;
+        if (pct === this._lastRealPct) {
+            const stuck = (Date.now() - this._lastProgressTime) / 1000;
+            if (stuck > 10) pct = Math.min(94, realPct + (stuck - 10) * 0.5);
+        } else {
+            this._lastRealPct = pct;
+            this._lastProgressTime = Date.now();
+        }
         const bx = 660, by = 600, bw = 600, bh = 18, br = 9;
         // 底色
         ctx.fillStyle='rgba(255,255,255,0.08)';
