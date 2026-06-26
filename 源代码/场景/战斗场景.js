@@ -7,8 +7,7 @@ import { SpriteManager } from '../核心/雪碧图管理器.js';
 export class BattleScene {
     constructor(g, d = {}) {
         this.g = g; this.w = 1920; this.h = 1080;
-        // 坐标转换：JSON中心坐标系 → 画布左上角坐标系
-        this._cx = this.w/2; this._cy = this.h/2;
+        this._cx = 960; this._cy = 540;
         this.im = {}; this.ok = false;
         this.useSprite = false; // true=雪碧图, false=逐帧（技能做完后再切）
         this.gameMode = d.gameMode || '一局定胜负';

@@ -124,15 +124,17 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 */
+    /** 响应式缩放 — 全局半分辨率 */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth, ph = parent.clientHeight;
-        const scale = Math.min(pw / 1920, ph / 1080);
-        this.canvas.width = 1920;
-        this.canvas.height = 1080;
-        this.canvas.style.width = Math.floor(1920 * scale) + 'px';
-        this.canvas.style.height = Math.floor(1080 * scale) + 'px';
+        const iw = 960, ih = 540;
+        const scale = Math.min(pw / iw, ph / ih);
+
+        this.canvas.width = iw;
+        this.canvas.height = ih;
+        this.canvas.style.width = Math.floor(iw * scale) + 'px';
+        this.canvas.style.height = Math.floor(ih * scale) + 'px';
         this.scale = scale;
         this.ctx.imageSmoothingEnabled = false;
     }
@@ -193,14 +195,10 @@ export class Game {
                     this.currentScene.update(this.deltaTime);
                 }
                 if (this.currentScene.render) {
-                    if (this.renderScale !== 1) {
-                        this.ctx.save();
-                        this.ctx.scale(this.renderScale, this.renderScale);
-                        this.currentScene.render(this.ctx, this.deltaTime);
-                        this.ctx.restore();
-                    } else {
-                        this.currentScene.render(this.ctx, this.deltaTime);
-                    }
+                    this.ctx.save();
+                    this.ctx.scale(0.5, 0.5);
+                    this.currentScene.render(this.ctx, this.deltaTime);
+                    this.ctx.restore();
                 }
             } catch(e) {
                 console.error('游戏循环错误:', e);
