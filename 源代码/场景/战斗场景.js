@@ -351,27 +351,11 @@ export class BattleScene {
         const iconTasks = allSkills.map(s => L('sk_'+s, `游戏资源/图像/UI/${s}1_透明.png`));
         await Promise.all(iconTasks);
         this.loadingProgress = 25;
-        // ═══ 雪碧图按需加载 ═══
+        // ═══ 雪碧图加载（仅 bg/sz/fz/idle 使用） ═══
         this.useSprite = true;
-        const baseKeys = ['walk','jump','drop','float','death'];
-        // bg/sz/fz/idle 不用雪碧图 — GPU 纹理采样开销远超独立 PNG
-        const skillAnimMap = {
-            '回血':['heal'], '强化':['buff','buffIdle'], '无敌之盾':['shield'],
-            '神速':['speed'], '隐身面具':[], '冰冻':['slash','shield'],
-            '淬毒刃':['poisonBlade','meleeSlash','hitReact','shield'],
-            '烈焰斩':['flameBlade','meleeSlash','hitReact','shield'],
-            '激光':['laser','meleeSlash','hitReact','shield'],
-            '震雷枪':['thunder','meleeSlash','hitReact','shield'],
-            '巨剑术':['giantSword','hitReact','shield'],
-            '普攻':['meleeSlash','meleeChop','hitReact','shield','buffAttack'],
-        };
-        const needed = new Set(baseKeys);
-        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
-            const keys = skillAnimMap[s];
-            if (keys) keys.forEach(k => needed.add(k));
-        }
-        // 雪碧图全部并行加载（总时间 = 最慢的那一个，不是累加）
-        await Promise.all([...needed].map(k =>
+        // 只加载 bg/sz/fz/idle 雪碧图，角色动作走逐帧加载
+        const spriteKeys = ['bg','sz','fz','idle'];
+        await Promise.all(spriteKeys.map(k =>
             this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {})
         ));
         this.loadingProgress = 55;
