@@ -454,7 +454,7 @@ export class BattleScene {
                 i.onerror = () => r(); i.src = u;
                 setTimeout(() => r(), 8000);
             });
-            await L('普攻','游戏资源/图像/UI/普攻_透明.png');
+            await L('普攻','游戏资源/图像/UI/普攻_透明.webp');
             // P1普攻（左，JSON center -790.28,-395.84, display 112.44×112.44）
             this.atkBtn1 = { x:-790.28+this._cx-56.22, y:-395.84+540-56.22, w:112.44, h:112.44 };
             // P2普攻（右，JSON center 794.52,-383.12）

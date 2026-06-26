@@ -7,6 +7,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>骑士对决</title>
+    <!-- 预加载主菜单背景（加速首屏） -->
+    <link rel="preload" as="image" href="游戏资源/图像/UI/主页.webp">
+    <link rel="preload" as="image" href="游戏资源/图像/场景/主页早晨.webp">
+    <link rel="preload" as="image" href="游戏资源/图像/场景/主页晚上.webp">
+    <!-- 预连接 CloudBase CDN -->
+    <link rel="preconnect" href="https://sunwanxin-123-d9gx0fbcja1a46cc7-1410116051.tcloudbaseapp.com" crossorigin>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -32,7 +38,7 @@
 </head>
 <body>
     <div id="game-container"><canvas id="game-canvas"></canvas></div>
-    <div style="position:fixed;bottom:4px;right:6px;color:#ff0;font-size:12px;z-index:9999;background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;">build.54</div>
+    <div style="position:fixed;bottom:4px;right:6px;color:#ff0;font-size:12px;z-index:9999;background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;">build.55</div>
     <script>
         window._isMobile = false;
         function checkMobile(){

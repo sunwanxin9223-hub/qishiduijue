@@ -5,12 +5,20 @@ export class MenuScene {
     constructor(g, d={}) { this.g = g; this.w = 1920; this.h = 1080; this.im = {}; this.ok = false; this.s = false; this.hv = null; this.gameMode = d.gameMode || localStorage.getItem('gameMode') || '一局定胜负'; this.sliderDrag = null; this._pressed = null; }
 
     async init() {
-        const L = (k, u) => new Promise(r => { const i = new Image(); const t = setTimeout(() => { console.warn(`加载超时: ${k} ${u}`); this.im[k] = i; r(); }, 15000); i.onload = () => { clearTimeout(t); this.im[k] = i; r(); }; i.onerror = () => { clearTimeout(t); console.error(`加载失败: ${k} ${u}`); this.im[k] = i; r(); }; i.src = u; });
-        await Promise.all([L('bg','游戏资源/图像/UI/主页.png'),L('bg_morning','游戏资源/图像/场景/主页早晨.png'),L('bg_evening','游戏资源/图像/场景/主页晚上.png')]);
-        this.ok = true;
-        // 时间自适应背景：6-12早晨 12-19下午 19-6晚上
+        const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => r(); i.src = u; });
+        // 时间自适应背景：6-12早晨 12-19下午 19-6晚上 → 只加载需要的
         const h = new Date().getHours();
-        this.bgKey = h>=6&&h<12?'bg_morning':h>=12&&h<19?'bg':'bg_evening';
+        if(h>=6&&h<12){
+            this.bgKey='bg_morning';
+            await L('bg_morning','游戏资源/图像/场景/主页早晨.webp');
+        } else if(h>=12&&h<19){
+            this.bgKey='bg';
+            await L('bg','游戏资源/图像/UI/主页.webp');
+        } else {
+            this.bgKey='bg_evening';
+            await L('bg_evening','游戏资源/图像/场景/主页晚上.webp');
+        }
+        this.ok = true;
         this.layers = [{i:this.bgKey,x:0,y:0,w:1920,h:1080,o:0}];
         // JSON交互框数据（topLeft相对画布中心，需+960/+540转绝对坐标）
         const C=(x,y,w,h,go)=>({x:x+960,y:y+540,w,h,go});

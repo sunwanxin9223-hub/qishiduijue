@@ -21,8 +21,8 @@ export class RoomScene {
     async init() {
         const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => { console.error('FAIL', k, u); r(); }; i.src = u; });
         const AD = '游戏资源/序列帧/人物动作/联机准备界面趣味动画_色键输出/透明帧';
-        const tasks = [L('bg', '游戏资源/图像/场景/联机界面背景1.jpg')];
-        for (let j = 1; j <= 121; j++) tasks.push(L('a' + j, `${AD}/frame_${String(j).padStart(5, '0')}.png`));
+        const tasks = [L('bg', '游戏资源/图像/场景/联机界面背景1.webp')];
+        for (let j = 1; j <= 121; j++) tasks.push(L('a' + j, `${AD}/frame_${String(j).padStart(5, '0')}.webp`));
         // 后台加载动画帧，不阻塞界面
         Promise.all(tasks).then(() => {
             for (let j = 1; j <= 121; j++) this.animFrames.push(this.im['a' + j]);
