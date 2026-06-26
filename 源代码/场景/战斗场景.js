@@ -1219,7 +1219,7 @@ export class BattleScene {
             va.timer += dt;
             if(va.type==='final'){
                 va.frameTimer += dt*1000;
-                const fps=120, fInt=1000/fps;
+                const fps=120, fInt=1000/(fps * this.speedMult);
                 while(va.frameTimer >= fInt){va.frameTimer -= fInt; va.frame++;}
                 if(va.frame > 120) va.frame = 121;
                 if(va.frame >= 121 && !va.showText) va.showText = true;
@@ -1267,7 +1267,7 @@ export class BattleScene {
             }
             if(m.poisonStarted && !m.defStarted){
                 m.poisonTimer += dt*1000;
-                const pInt = 1000/m.poisonFps;
+                const pInt = 1000/(m.poisonFps * this.speedMult);
                 while(m.poisonTimer >= pInt){m.poisonTimer -= pInt; m.poisonFrame++;}
                 // 帧命中 或 攻击动画播完+200ms兜底
                 if(m.poisonFrame >= m.poisonHitFrame || (m.atkFrame >= 121 && m.poisonTimer > 200)){
@@ -1297,7 +1297,7 @@ export class BattleScene {
             }
             if(m.flameStarted && !m.defStarted && !m.flameHit){
                 m.flameTimer += dt*1000;
-                const fInt = 1000/m.flameFps;
+                const fInt = 1000/(m.flameFps * this.speedMult);
                 while(m.flameTimer >= fInt){m.flameTimer -= fInt; m.flameFrame++;}
                 // 烈焰斩第85帧启动盾动画
                 if(!m.shieldPre && m.flameFrame >= m.flameShieldStart && this.players[1-m.pi].shielded){
@@ -1322,7 +1322,7 @@ export class BattleScene {
             // 激光特效更新（始终推进直到melee结束）
             if(m.laserStarted){
                 m.laserTimer += dt*1000;
-                const lInt = 1000/m.laserFps;
+                const lInt = 1000/(m.laserFps * this.speedMult);
                 while(m.laserTimer >= lInt){m.laserTimer -= lInt; m.laserFrame++;}
                 const marks = [41,58,75,92];
                 for(const mk of marks){
@@ -1350,7 +1350,7 @@ export class BattleScene {
             // 震雷枪特效更新（帧始终推进，命中仅触发一次）
             if(m.thunderStarted){
                 m.thunderTimer += dt*1000;
-                const tInt = 1000/m.thunderFps;
+                const tInt = 1000/(m.thunderFps * this.speedMult);
                 while(m.thunderTimer >= tInt){m.thunderTimer -= tInt; m.thunderFrame++;}
                 if(m.thunderFrame >= 83 && !m.thunderHit){
                     m.thunderHit = true;
@@ -1374,13 +1374,14 @@ export class BattleScene {
             // 盾动画：等待shieldWait帧后开始
             if(m.shieldPre && !m.shieldActive){
                 if(m.shieldWait > 0){
+                    const shieldFps = 120 * this.speedMult;
                     m.shieldTimer += dt*1000;
-                    while(m.shieldTimer >= 1000/120 && m.shieldWait > 0){m.shieldTimer -= 1000/120; m.shieldWait--;}
+                    while(m.shieldTimer >= 1000/shieldFps && m.shieldWait > 0){m.shieldTimer -= 1000/shieldFps; m.shieldWait--;}
                 }
                 if(m.shieldWait <= 0 && (m.shieldFrame > 0 || (m.shieldStartAt!=null && m.atkFrame >= m.shieldStartAt))){
                     if(m.shieldFrame===0) m.shieldFrame = 1;
                     m.shieldTimer += dt*1000;
-                    while(m.shieldTimer >= 1000/120){m.shieldTimer -= 1000/120; m.shieldFrame++;}
+                    while(m.shieldTimer >= 1000/shieldFps){m.shieldTimer -= 1000/shieldFps; m.shieldFrame++;}
                 }
             }
             // 命中帧（淬毒刃跳过，由特效命中处理）
@@ -1408,7 +1409,7 @@ export class BattleScene {
             if(m.defStarted){
                 if(m.shieldActive){
                     m.shieldTimer += dt*1000;
-                    const shInt = 1000/120;
+                    const shInt = 1000/(120 * this.speedMult);
                     while(m.shieldTimer >= shInt){
                         m.shieldTimer -= shInt; m.shieldFrame++;
                         // 激光41-109期间盾牌循环68→71帧
@@ -1418,7 +1419,7 @@ export class BattleScene {
                     }
                 } else {
                     m.defTimer += dt*1000;
-                    const defInt = 1000/m.defFps;
+                    const defInt = 1000/(m.defFps * this.speedMult);
                     while(m.defTimer >= defInt){
                         m.defTimer -= defInt; m.defFrame++;
                         if(m.laserStarted && m.laserFrame >= m.laserHitFrame && m.laserFrame <= m.laserLoopEnd){
