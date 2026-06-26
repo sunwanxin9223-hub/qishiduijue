@@ -132,14 +132,19 @@ export class Game {
         const ph = this.canvas.parentElement.clientHeight;
         const iw = isMobile ? 960 : 1920;
         const ih = isMobile ? 540 : 1080;
-        // 手机端拉伸填充，桌面端保持比例
-        const scale = isMobile ? Math.max(pw / iw, ph / ih) : Math.min(pw / iw, ph / ih);
-
+        // 手机端拉伸填满容器，桌面端保持比例
         this.canvas.width = iw;
         this.canvas.height = ih;
-        this.canvas.style.width = Math.floor(iw * scale) + 'px';
-        this.canvas.style.height = Math.floor(ih * scale) + 'px';
-        this.scale = scale;
+        if (isMobile) {
+            this.canvas.style.width = Math.floor(pw) + 'px';
+            this.canvas.style.height = Math.floor(ph) + 'px';
+            this.scale = Math.min(pw / iw, ph / ih);
+        } else {
+            const scale = Math.min(pw / iw, ph / ih);
+            this.canvas.style.width = Math.floor(iw * scale) + 'px';
+            this.canvas.style.height = Math.floor(ih * scale) + 'px';
+            this.scale = scale;
+        }
         this._halfRes = isMobile;
         this.ctx.imageSmoothingEnabled = false;
     }
