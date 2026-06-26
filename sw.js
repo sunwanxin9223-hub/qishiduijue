@@ -15,12 +15,15 @@ self.addEventListener('fetch', e => {
     const url = new URL(e.request.url);
     // 只代理 GitHub Pages 的资源请求，跳过 API 和外部链接
     if (url.hostname.includes('github.io') || url.hostname.includes('sunwanxin9223-hub')) {
-        const cdnUrl = CDN + url.pathname.replace('/qishiduijue/', '');
-        e.respondWith(
-            fetch(cdnUrl, { 
-                mode: 'cors',
-                credentials: 'omit'
-            }).catch(() => fetch(e.request)) // CDN失败时回退到原站
-        );
+        // 只对 /qishiduijue/ 路径下的资源走 CDN
+        if (url.pathname.startsWith('/qishiduijue/')) {
+            const cdnUrl = CDN + url.pathname.replace('/qishiduijue/', '');
+            e.respondWith(
+                fetch(cdnUrl, { 
+                    mode: 'cors',
+                    credentials: 'omit'
+                }).catch(() => fetch(e.request)) // CDN失败时回退到原站
+            );
+        }
     }
 });
