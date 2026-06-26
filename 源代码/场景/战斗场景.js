@@ -589,12 +589,10 @@ export class BattleScene {
                     return;
                 }
             }
-            // 结束回合（可随时点）
+            // 结束回合（随时可点）
             if(this._isMobile && this.endBtn){
                 if(x>=this.endBtn.x&&x<=this.endBtn.x+this.endBtn.w&&y>=this.endBtn.y&&y<=this.endBtn.y+this.endBtn.h){
-                    if(this.skillUsed && this.moved) this.endTurn();
-                    else this.hints.push({text:'请先移动并使用技能',timer:0,color:'255,200,100'});
-                    return;
+                    this.endTurn(); return;
                 }
             }
             const pi=this.turn;
@@ -1759,8 +1757,8 @@ export class BattleScene {
                 if(icon){ this._draw(ctx, icon, ab.x, ab.y, ab.w, ab.h); }
                 if(this._pressed==='atk'){ ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(ab.x,ab.y,ab.w,ab.h); }
             }
-            // 结束回合按钮（已移动+已用技能时显示）
-            if(!p.dead && this.skillUsed && this.moved){
+            // 结束回合按钮（回合玩家始终可见）
+            if(!p.dead){
                 const eb = this.endBtn;
                 ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(eb.x,eb.y,eb.w,eb.h);
                 ctx.strokeStyle='rgba(224,192,112,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(eb.x,eb.y,eb.w,eb.h);
