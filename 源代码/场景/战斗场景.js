@@ -2306,7 +2306,7 @@ export class BattleScene {
         const realPct = pct;
         if (pct === this._lastRealPct) {
             const stuck = (Date.now() - this._lastProgressTime) / 1000;
-            if (stuck > 10) pct = Math.min(94, realPct + (stuck - 10) * 0.5);
+            if (stuck > 10) pct = Math.min(94, Math.floor(realPct + (stuck - 10)));
         } else {
             this._lastRealPct = pct;
             this._lastProgressTime = Date.now();
