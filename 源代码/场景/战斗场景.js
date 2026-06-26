@@ -374,13 +374,17 @@ export class BattleScene {
             this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {})
         ));
         this.loadingProgress = 55;
-        // 场景帧 + 结算帧 + 音效 — 全部并行，各有超时
+        // 手机端：减量加载加速
+        const isMob = window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024);
+        const sceneN = isMob ? 5 : 30;
+        const vicN = isMob ? 10 : 60;
+        // 场景帧 + 结算帧 + 音效 — 全部并行
         const tasks = [];
         const padN = n => String(n).padStart(5,'0');
         // 场景动画前10帧
         for (const k of ['bg','sz','fz','idle']) {
             const dir = this.animPaths[k];
-            for (let n = 2; n <= 30; n++) {
+            for (let n = 2; n <= sceneN; n++) {
                 const ck = k + n;
                 if (!this.frameCache.has(ck)) {
                     tasks.push(new Promise(r => {
@@ -395,7 +399,7 @@ export class BattleScene {
             }
         }
         // 结算动画前10帧
-        for (let n = 1; n <= 60; n++) {
+        for (let n = 1; n <= vicN; n++) {
             const ck = 'vicFinal'+n;
             tasks.push(new Promise(r => {
                 let done = false;
@@ -438,7 +442,7 @@ export class BattleScene {
             }));
         }
         // 2分钟硬上限，超时强行进入游戏
-        await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 120000))]);
+        await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, isMob ? 60000 : 120000))]);
         this.loadingProgress = 80;
         this.ok = true;
         // 手机端检测 + 加载普攻图标
