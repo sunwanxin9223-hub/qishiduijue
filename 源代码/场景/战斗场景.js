@@ -183,7 +183,7 @@ export class BattleScene {
                 }
             };
             img.onerror = () => { this.frameLoading.delete(ck); };
-            img.src = `${dir}/frame_${pad(num)}.png`;
+            img.src = `${dir}/frame_${pad(num)}.webp`;
         }, 0);
     }
 
@@ -278,7 +278,7 @@ export class BattleScene {
                 r();
             };
             img.onerror = () => r();
-            img.src = `${dir}/frame_${pad(n)}.png`;
+            img.src = `${dir}/frame_${pad(n)}.webp`;
         });
         // 人物动作抽帧：只加载奇数帧，前30帧同步等，其余后台
         const isChar = type!=='bg'&&type!=='sz'&&type!=='fz';
@@ -294,7 +294,7 @@ export class BattleScene {
             if(this.frameCache.has(type+i)) continue;
             const img=new Image();
             img.onload=()=>this.frameCache.set(type+i,img);
-            img.src=`${dir}/frame_${pad(i)}.png`;
+            img.src=`${dir}/frame_${pad(i)}.webp`;
         }
     }
     /** 全量预加载动画的所有帧（init 期使用，并行分批避免卡顿） */
@@ -311,7 +311,7 @@ export class BattleScene {
                     const img = new Image();
                     img.onload = () => { this.frameCache.set(ck, img); r(); };
                     img.onerror = () => r();
-                    img.src = `${dir}/frame_${pad(n)}.png`;
+                    img.src = `${dir}/frame_${pad(n)}.webp`;
                 }));
             }
             if (batch.length > 0) await Promise.all(batch);
@@ -332,15 +332,15 @@ export class BattleScene {
             const img = new Image();
             img.onload = () => { this.frameCache.set(key + num, img); r(); };
             img.onerror = () => r();
-            img.src = `${dir}/frame_${pad(num)}.png`;
+            img.src = `${dir}/frame_${pad(num)}.webp`;
         });
 
         this.loadingProgress = 5;
         await Promise.all([
-            L('地面', '游戏资源/图像/场景/地面.png'),
-            L('平台', '游戏资源/图像/场景/平台_透明.png'),
-            L('光圈', '游戏资源/图像/场景/光圈站位_透明.png'),
-            L('暂停', '游戏资源/图像/UI/暂停1_透明.png'),
+            L('地面', '游戏资源/图像/场景/地面.webp'),
+            L('平台', '游戏资源/图像/场景/平台_透明.webp'),
+            L('光圈', '游戏资源/图像/场景/光圈站位_透明.webp'),
+            L('暂停', '游戏资源/图像/UI/暂停1_透明.webp'),
             LF('bg', 1), LF('sz', 1), LF('fz', 1), LF('idle', 1),
             LF('heal', 1), LF('death', 1), LF('buff', 1), LF('buffIdle', 1), LF('speed', 1), LF('slash', 1),
             LF('meleeSlash', 1), LF('meleeChop', 1), LF('buffAttack', 1), LF('giantSword', 1), LF('hitReact', 1), LF('shield', 1),
@@ -348,7 +348,7 @@ export class BattleScene {
         this.loadingProgress = 15;
         // 加载技能图标
         const allSkills = [...new Set([...this.skills1, ...this.skills2, '回血'])];
-        const iconTasks = allSkills.map(s => L('sk_'+s, `游戏资源/图像/UI/${s}1_透明.png`));
+        const iconTasks = allSkills.map(s => L('sk_'+s, `游戏资源/图像/UI/${s}1_透明.webp`));
         await Promise.all(iconTasks);
         this.loadingProgress = 25;
         // ═══ 雪碧图按需加载 ═══
@@ -393,7 +393,7 @@ export class BattleScene {
                         const img = new Image();
                         img.onload = () => { if(!done){done=true;this.frameCache.set(ck,img);r();} };
                         img.onerror = () => { if(!done){done=true;r();} };
-                        img.src = `${dir}/frame_${padN(n)}.png`;
+                        img.src = `${dir}/frame_${padN(n)}.webp`;
                         setTimeout(() => { if(!done){done=true;r();} }, 15000);
                     }));
                 }
@@ -407,7 +407,7 @@ export class BattleScene {
                 const img = new Image();
                 img.onload = () => { if(!done){done=true;this.frameCache.set(ck,img);r();} };
                 img.onerror = () => { if(!done){done=true;r();} };
-                img.src = `${this.victoryFrameDir}/frame_${padN(n)}.png`;
+                img.src = `${this.victoryFrameDir}/frame_${padN(n)}.webp`;
                 setTimeout(() => { if(!done){done=true;r();} }, 30000);
             }));
         }
@@ -1313,7 +1313,7 @@ export class BattleScene {
                         const img3=new Image();
                         img3.onload=()=>this.frameCache.set('vicFinal'+fn2,img3);
                         img3.onerror=()=>{};
-                        img3.src=`${this.victoryFrameDir}/frame_${pad3(fn2)}.png`;
+                        img3.src=`${this.victoryFrameDir}/frame_${pad3(fn2)}.webp`;
                     }
                 }
             } else {
@@ -2428,9 +2428,9 @@ export class BattleScene {
             i.onerror = () => r(); i.src = u;
         });
         await Promise.all([
-            L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.png'),
-            L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
-            L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
+            L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.webp'),
+            L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.webp'),
+            L('frozen','游戏资源/图像/人物/被冻住1_透明.webp'),
         ]);
         // 结算帧剩余 11-121
         const vicPad = n => String(n).padStart(5,'0');
@@ -2440,7 +2440,7 @@ export class BattleScene {
                 const img = new Image();
                 img.onload = () => this.frameCache.set(ck, img);
                 img.onerror = () => {};
-                img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.png`;
+                img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.webp`;
             }
             if(n%10===0) await new Promise(r => setTimeout(r, 100));
         }
