@@ -584,8 +584,8 @@ export class BattleScene {
             }
             if(this.moving||this.moveLoading)return;
             // 手机端：普攻/结束回合
+            const pi = this.turn;
             if(this._isMobile && !this.skillUsed){
-                const pi=this.turn;
                 const ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){
                     const enemy=this.players[1-pi];
@@ -650,11 +650,12 @@ export class BattleScene {
             }
             if(this.moving||this.moveLoading)return;
             // 手机端按钮按下反馈
+            const mdPi = this.turn;
             if(this._isMobile && !this.skillUsed){
-                const pi=this.turn, ab = pi===0 ? this.atkBtn1 : this.atkBtn2;
+                const ab = mdPi===0 ? this.atkBtn1 : this.atkBtn2;
                 if(x>=ab.x&&x<=ab.x+ab.w&&y>=ab.y&&y<=ab.y+ab.h){this._pressed='atk';return;}
             }
-            const ep = pi===0 ? this.endBtn1 : this.endBtn2;
+            const ep = mdPi===0 ? this.endBtn1 : this.endBtn2;
             if(this._isMobile && ep && x>=ep.x&&x<=ep.x+ep.w&&y>=ep.y&&y<=ep.y+ep.h){this._pressed='end';return;}
             // 技能图标按下（交互框）
             if(!this.skillUsed){const pi=this.turn;
