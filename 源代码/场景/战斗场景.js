@@ -25,7 +25,7 @@ export class BattleScene {
         this.loadingProgress = 0;
         this._lastProgressTime = Date.now();
         this._lastRealPct = 0;
-        this.speedMult = 1/3;
+        this.speedMult = parseFloat(localStorage.getItem('qs_speed') || '0.333');
         this._speedTutorial = false;
         this._isMobile = false; // 手机端检测
         this._beamKey = '';
@@ -555,6 +555,7 @@ export class BattleScene {
                     const speeds = [1/3, 2/3, 1];
                     const idx = speeds.indexOf(this.speedMult);
                     this.speedMult = speeds[(idx+1)%4];
+                    localStorage.setItem('qs_speed', this.speedMult);
                 }
                 return;
             }
@@ -572,6 +573,7 @@ export class BattleScene {
                 const speeds = [1/3, 2/3, 1];
                 const idx = speeds.indexOf(this.speedMult);
                 this.speedMult = speeds[(idx+1)%4];
+                localStorage.setItem('qs_speed', this.speedMult);
                 return;
             }
             if(this.moving||this.moveLoading)return;
