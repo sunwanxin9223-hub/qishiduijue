@@ -41,6 +41,10 @@ export class Game {
 
     /** 初始化 Canvas */
     init() {
+        // 尝试原生锁定横屏
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.resize();

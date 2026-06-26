@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>骑士对决</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,6 +15,15 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+        }
+        /* 手机端竖屏→自动旋转为横屏 */
+        @media (max-width: 768px) and (orientation: portrait) {
+            #game-container {
+                position: fixed; top: 0; left: 0;
+                width: 100vh; height: 100vw;
+                transform: rotate(90deg) translateY(-100%);
+                transform-origin: top left;
+            }
         }
         #game-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
