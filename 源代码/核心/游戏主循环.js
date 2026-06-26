@@ -120,22 +120,26 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 */
+    /** 响应式缩放 — 手机端内部分辨率减半省GPU */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth;
         const ph = parent.clientHeight;
-        const scale = Math.min(pw / this.designW, ph / this.designH);
-        const displayW = Math.floor(this.designW * scale);
-        const displayH = Math.floor(this.designH * scale);
+        const isMobile = pw < 1024 || ('ontouchstart' in window);
+        const internalScale = isMobile ? 0.5 : 1;
+        const iw = Math.round(this.designW * internalScale);
+        const ih = Math.round(this.designH * internalScale);
+        const scale = Math.min(pw / iw, ph / ih);
+        const displayW = Math.floor(iw * scale);
+        const displayH = Math.floor(ih * scale);
 
-        this.canvas.width = this.designW;
-        this.canvas.height = this.designH;
+        this.canvas.width = iw;
+        this.canvas.height = ih;
         this.canvas.style.width = displayW + 'px';
         this.canvas.style.height = displayH + 'px';
         this.scale = scale;
+        this.renderScale = internalScale; // 场景render内部x,y,w,h都需×此值
 
-        // 关闭平滑，保持像素风格
         this.ctx.imageSmoothingEnabled = false;
     }
 
@@ -195,7 +199,15 @@ export class Game {
                     this.currentScene.update(this.deltaTime);
                 }
                 if (this.currentScene.render) {
-                    this.currentScene.render(this.ctx, this.deltaTime);
+                    // 手机端内部分辨率减半→渲染时缩放补偿
+                    if (this.renderScale !== 1) {
+                        this.ctx.save();
+                        this.ctx.scale(this.renderScale, this.renderScale);
+                        this.currentScene.render(this.ctx, this.deltaTime);
+                        this.ctx.restore();
+                    } else {
+                        this.currentScene.render(this.ctx, this.deltaTime);
+                    }
                 }
             } catch(e) {
                 console.error('游戏循环错误:', e);
