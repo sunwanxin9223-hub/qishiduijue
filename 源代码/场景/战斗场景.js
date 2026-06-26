@@ -604,7 +604,6 @@ export class BattleScene {
                     this.endTurn(); return;
                 }
             }
-            const pi=this.turn;
             for(let si=0;si<4;si++){
                 const h=this.skHit[pi][si];
                 if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h){
