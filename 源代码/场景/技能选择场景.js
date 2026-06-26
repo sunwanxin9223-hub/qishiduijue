@@ -121,8 +121,11 @@ export class SkillSelectScene {
         const bg=this.im['bg'];if(bg&&bg.naturalWidth>0)ctx.drawImage(bg,this.bg.x,this.bg.y,this.bg.w,this.bg.h);
         // 角色
         const ch=this.im['ch'];if(ch&&ch.naturalWidth>0)for(const c of this.chars){if(c.flip){ctx.save();ctx.translate(c.x+c.w,c.y);ctx.scale(-1,1);ctx.drawImage(ch,0,0,c.w,c.h);ctx.restore();}else ctx.drawImage(ch,c.x,c.y,c.w,c.h);}
-        // 技能图标
+        // 技能图标（手机端缩小3倍）
+        const iconScale = (window._isMobile || ('ontouchstart' in window && window.innerWidth < 1024)) ? 0.33 : 1;
         for(let i=0;i<this.skills.length;i++){const s=this.skills[i];const img=this.im[s.n];if(!img||img.naturalWidth===0)continue;
+            const sx = s.x + s.w*(1-iconScale)/2, sy = s.y + s.h*(1-iconScale)/2;
+            const sw = s.w*iconScale, sh = s.h*iconScale;
             if(this.cur.includes(this.cl(s.n))){
                 const h=this.hitSk[i];
                 // 外发光
@@ -134,7 +137,7 @@ export class SkillSelectScene {
                 // 内层亮线（立体感）
                 ctx.strokeStyle='rgba(255,255,240,0.6)';ctx.lineWidth=1;this.rr(ctx,h.x,h.y,h.w,h.h,8,true);
             }
-            ctx.drawImage(img,s.x,s.y,s.w,s.h);
+            ctx.drawImage(img,sx,sy,sw,sh);
         }
         // 准备好了按钮 — 根据角色决定哪个按钮活跃
         const activeIdx = this.role === '好友' ? 1 : (this.ph === 1 ? 0 : 1);
