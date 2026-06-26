@@ -7,7 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
-            width: 100%; height: 100%;
+            width: 100vw; height: 100dvh;
             overflow: hidden;
             background: #0a0a1a;
             font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -17,8 +17,11 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        #game-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+        #game-container {
+            width: 100vw; height: 100dvh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100vw; max-height: 100dvh; }
     </style>
 </head>
 <body>
