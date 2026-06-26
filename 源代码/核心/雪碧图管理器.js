@@ -21,10 +21,10 @@ export class SpriteManager {
      */
     async load(key, jsonPath) {
         if (this.sheets.has(key)) return this.sheets.get(key);
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
             try {
                 const ctrl = new AbortController();
-                const t = setTimeout(() => ctrl.abort(), 30000);
+                const t = setTimeout(() => ctrl.abort(), 15000);
                 const resp = await fetch(jsonPath, {signal: ctrl.signal}).finally(() => clearTimeout(t));
                 const meta = await resp.json();
                 // 多sheet支持
@@ -54,7 +54,7 @@ export class SpriteManager {
                     return entry;
                 }
             } catch(e) {
-                if (attempt === 3) throw e;
+                if (attempt === 2) throw e;
                 await new Promise(r => setTimeout(r, 2000));
             }
         }

@@ -366,9 +366,10 @@ export class BattleScene {
             const keys = skillAnimMap[s];
             if (keys) keys.forEach(k => needed.add(k));
         }
-        for (const k of needed) {
-            await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
-        }
+        // 雪碧图全部并行加载（总时间 = 最慢的那一个，不是累加）
+        await Promise.all([...needed].map(k =>
+            this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {})
+        ));
         this.loadingProgress = 55;
         // 场景帧 + 结算帧 + 音效 — 全部并行，各有超时
         const tasks = [];
@@ -385,7 +386,7 @@ export class BattleScene {
                         img.onload = () => { if(!done){done=true;this.frameCache.set(ck,img);r();} };
                         img.onerror = () => { if(!done){done=true;r();} };
                         img.src = `${dir}/frame_${padN(n)}.png`;
-                        setTimeout(() => { if(!done){done=true;r();} }, 30000);
+                        setTimeout(() => { if(!done){done=true;r();} }, 15000);
                     }));
                 }
             }
@@ -433,6 +434,7 @@ export class BattleScene {
                 setTimeout(() => { if(!done){done=true;r();} }, 30000);
             }));
         }
+        // 2分钟硬上限，超时强行进入游戏
         await Promise.race([Promise.all(tasks), new Promise(r => setTimeout(r, 120000))]);
         this.loadingProgress = 80;
         this.ok = true;
