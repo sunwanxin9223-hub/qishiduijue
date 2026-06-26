@@ -23,25 +23,24 @@
 </head>
 <body>
     <div id="game-container"><canvas id="game-canvas"></canvas></div>
+    <div id="version" style="position:fixed;bottom:2px;right:4px;color:rgba(255,255,255,0.15);font-size:10px;z-index:999;pointer-events:none;"></div>
     <script>
-        // 手机端检测
-        (function(){
-            window._gameRotated = false;
-            window._isMobile = false;
-            function check(){
-                window._isMobile = ('ontouchstart' in window && window.innerWidth < 1024);
-                if(window._isMobile && screen.orientation && screen.orientation.lock){
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-                if(window._isMobile && window.orientation && window.orientation.lock){
-                    window.orientation.lock('landscape').catch(() => {});
-                }
+        document.getElementById('version').textContent = 'v.' + Date.now();
+        window._isMobile = false;
+        function checkMobile(){
+            window._isMobile = ('ontouchstart' in window && window.innerWidth < 1024);
+            if(window._isMobile && screen.orientation && screen.orientation.lock){
+                screen.orientation.lock('landscape').catch(function(){});
             }
-            check();
-            window.addEventListener('resize', check);
-            window.addEventListener('orientationchange', function(){ setTimeout(check, 200); });
-        })();
+        }
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        window.addEventListener('orientationchange', function(){ setTimeout(checkMobile, 200); });
+        // 动态加载防缓存
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = '源代码/main.js?v=' + Date.now();
+        document.body.appendChild(s);
     </script>
-    <script type="module" src="源代码/main.js?v=291"></script>
 </body>
 </html>
