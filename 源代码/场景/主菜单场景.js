@@ -2,7 +2,7 @@
  * 主菜单 — 骑士对决
  */
 export class MenuScene {
-    constructor(g, d={}) { this.g = g; this.w = this.g.canvas.width; this.h = this.g.canvas.height; this.im = {}; this.ok = false; this.s = false; this.hv = null; this.gameMode = d.gameMode || localStorage.getItem('gameMode') || '一局定胜负'; this.sliderDrag = null; this._pressed = null; }
+    constructor(g, d={}) { this.g = g; this.w = 1920; this.h = 1080; this.im = {}; this.ok = false; this.s = false; this.hv = null; this.gameMode = d.gameMode || localStorage.getItem('gameMode') || '一局定胜负'; this.sliderDrag = null; this._pressed = null; }
 
     async init() {
         const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => r(); i.src = u; });

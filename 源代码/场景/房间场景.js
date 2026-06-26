@@ -3,7 +3,7 @@
  */
 export class RoomScene {
     constructor(g, d = {}) {
-        this.g = g; this.w = this.g.canvas.width; this.h = this.g.canvas.height;
+        this.g = g; this.w = 1920; this.h = 1080;
         this.im = {}; this.ok = false;
         this.isHost = false;
         this.isJoining = false;

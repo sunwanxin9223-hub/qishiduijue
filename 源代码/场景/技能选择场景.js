@@ -2,7 +2,7 @@
  * 备战界面 — 严格按 备战界面正式 (1).json
  */
 export class SkillSelectScene {
-    constructor(g, d = {}) { this.g = g; this.w = this.g.canvas.width; this.h = this.g.canvas.height; this.im = {}; this.ok = false; this.md = d.mode || '本地对战'; this.role = d.role || ''; this.gameMode = d.gameMode || '一局定胜负'; this.pwins = d.wins || [0,0]; this.pround = d.round || 1; this.ph = 1; this.p1 = d.p1 || []; this.p2 = d.p2 || []; this.mx = 3; this.tr = false; this.hv = null; this._t = null; this.waiting = false; this._pressed = null; this._tip = null; this._hoverKey = null; this._hoverTime = 0; }
+    constructor(g, d = {}) { this.g = g; this.w = 1920; this.h = 1080; this.im = {}; this.ok = false; this.md = d.mode || '本地对战'; this.role = d.role || ''; this.gameMode = d.gameMode || '一局定胜负'; this.pwins = d.wins || [0,0]; this.pround = d.round || 1; this.ph = 1; this.p1 = d.p1 || []; this.p2 = d.p2 || []; this.mx = 3; this.tr = false; this.hv = null; this._t = null; this.waiting = false; this._pressed = null; this._tip = null; this._hoverKey = null; this._hoverTime = 0; }
 
     async init() {
         const L = (k, u) => new Promise(r => { const i = new Image(); i.onload = () => { this.im[k] = i; r(); }; i.onerror = () => { console.error('FAIL', k, u); r(); }; i.src = u; });

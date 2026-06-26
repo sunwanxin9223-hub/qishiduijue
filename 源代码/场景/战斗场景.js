@@ -6,7 +6,7 @@ import { SpriteManager } from '../核心/雪碧图管理器.js';
 
 export class BattleScene {
     constructor(g, d = {}) {
-        this.g = g; this.w = this.g.canvas.width; this.h = this.g.canvas.height;
+        this.g = g; this.w = 1920; this.h = 1080;
         // 坐标转换：JSON中心坐标系 → 画布左上角坐标系
         this._cx = this.w/2; this._cy = this.h/2;
         this.im = {}; this.ok = false;
