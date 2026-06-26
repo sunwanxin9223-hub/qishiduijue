@@ -1662,9 +1662,8 @@ export class BattleScene {
         const sb=this.speedBtn;
         const labels = {[1/3]:'x1',[2/3]:'x2',[1]:'x3'};
         const smLabel = labels[this.speedMult] || 'x1';
+        const pulse = 0.5 + 0.5 * Math.sin(Date.now()/300); // 一次性计算，避免两次不一致
         if(this._speedTutorial){
-            // 高亮框 + 脉冲动画
-            const pulse = 0.5 + 0.5 * Math.sin(Date.now()/300);
             ctx.strokeStyle=`rgba(255,215,0,${0.6+pulse*0.4})`;ctx.lineWidth=3;
             ctx.strokeRect(sb.x-4,sb.y-4,sb.w+8,sb.h+8);
             ctx.fillStyle='rgba(255,215,0,0.2)';ctx.fillRect(sb.x-4,sb.y-4,sb.w+8,sb.h+8);
