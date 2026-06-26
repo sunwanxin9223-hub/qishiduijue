@@ -124,15 +124,13 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 手机端内部分辨率减半省GPU */
+    /** 响应式缩放 — 统一960×540内部分辨率 */
     resize() {
         const parent = this.canvas.parentElement;
         const pw = parent.clientWidth;
         const ph = parent.clientHeight;
-        const isMobile = pw < 1024 || ('ontouchstart' in window);
-        const internalScale = isMobile ? 0.5 : 1;
-        const iw = Math.round(this.designW * internalScale);
-        const ih = Math.round(this.designH * internalScale);
+        // 统一960×540（桌面也省75%显存，肉眼无区别）
+        const iw = 960, ih = 540;
         const scale = Math.min(pw / iw, ph / ih);
         const displayW = Math.floor(iw * scale);
         const displayH = Math.floor(ih * scale);
@@ -142,7 +140,7 @@ export class Game {
         this.canvas.style.width = displayW + 'px';
         this.canvas.style.height = displayH + 'px';
         this.scale = scale;
-        this.renderScale = internalScale; // 场景render内部x,y,w,h都需×此值
+        this.renderScale = 0.5; // 场景渲染时ctx.scale(0.5)补偿1920→960
 
         this.ctx.imageSmoothingEnabled = false;
     }

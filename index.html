@@ -16,14 +16,10 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        /* 手机端竖屏→自动旋转为横屏 */
-        @media (max-width: 768px) and (orientation: portrait) {
-            #game-container {
-                position: fixed; top: 0; left: 0;
-                width: 100vh; height: 100vw;
-                transform: rotate(90deg) translateY(-100%);
-                transform-origin: top left;
-            }
+        /* 移动端满屏 */
+        @media (max-width: 1024px) {
+            #game-container { position: fixed; inset: 0; }
+            canvas { object-fit: contain; max-width: 100vw; max-height: 100vh; }
         }
         #game-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
