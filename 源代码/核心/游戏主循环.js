@@ -47,6 +47,10 @@ export class Game {
         }
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
+        // Canvas渲染自检：画红框确认画布可用
+        this.ctx.fillStyle = '#400'; this.ctx.fillRect(0, 0, 100, 100);
+        this.ctx.fillStyle = '#fff'; this.ctx.font = '20px sans-serif';
+        this.ctx.fillText('canvas ok', 120, 50);
         this.resize();
         window.addEventListener('resize', () => this.resize());
         // BGM 初始化
@@ -124,23 +128,20 @@ export class Game {
         o2.start(t); o2.stop(t + 0.25);
     }
 
-    /** 响应式缩放 — 统一960×540内部分辨率 */
+    /** 响应式缩放 */
     resize() {
         const parent = this.canvas.parentElement;
-        const pw = parent.clientWidth;
-        const ph = parent.clientHeight;
-        // 统一960×540（桌面也省75%显存，肉眼无区别）
-        const iw = 960, ih = 540;
-        const scale = Math.min(pw / iw, ph / ih);
-        const displayW = Math.floor(iw * scale);
-        const displayH = Math.floor(ih * scale);
+        const pw = parent.clientWidth, ph = parent.clientHeight;
+        const scale = Math.min(pw / this.designW, ph / this.designH);
+        const displayW = Math.floor(this.designW * scale);
+        const displayH = Math.floor(this.designH * scale);
 
-        this.canvas.width = iw;
-        this.canvas.height = ih;
+        this.canvas.width = this.designW;
+        this.canvas.height = this.designH;
         this.canvas.style.width = displayW + 'px';
         this.canvas.style.height = displayH + 'px';
         this.scale = scale;
-        this.renderScale = 0.5; // 场景渲染时ctx.scale(0.5)补偿1920→960
+        this.renderScale = 1;
 
         this.ctx.imageSmoothingEnabled = false;
     }
@@ -201,15 +202,7 @@ export class Game {
                     this.currentScene.update(this.deltaTime);
                 }
                 if (this.currentScene.render) {
-                    // 手机端内部分辨率减半→渲染时缩放补偿
-                    if (this.renderScale !== 1) {
-                        this.ctx.save();
-                        this.ctx.scale(this.renderScale, this.renderScale);
-                        this.currentScene.render(this.ctx, this.deltaTime);
-                        this.ctx.restore();
-                    } else {
-                        this.currentScene.render(this.ctx, this.deltaTime);
-                    }
+                    this.currentScene.render(this.ctx, this.deltaTime);
                 }
             } catch(e) {
                 console.error('游戏循环错误:', e);
