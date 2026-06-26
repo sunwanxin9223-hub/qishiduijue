@@ -352,12 +352,12 @@ export class BattleScene {
             L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
         ]);
         this.loadingProgress = 30;
-        // 预加载最终结算关键帧（全部121帧，分批避免阻塞）
+        // 预加载最终结算关键帧（前30帧，播完前1秒再补剩余）
         const vicDir = this.victoryFrameDir;
         const pad5 = n => String(n).padStart(5,'0');
         const vicPreload = [];
-        for (let batch = 1; batch <= 121; batch += 20) {
-            const end = Math.min(batch + 19, 121);
+        for (let batch = 1; batch <= 30; batch += 20) {
+            const end = Math.min(batch + 19, 30);
             const tasks = [];
             for (let n = batch; n <= end; n++) {
                 tasks.push(new Promise(r=>{
@@ -368,11 +368,11 @@ export class BattleScene {
                 }));
             }
             await Promise.all(tasks);
-            this.loadingProgress = 30 + Math.round((end/121)*25);
+            this.loadingProgress = 30 + Math.round((end/30)*15);
         }
         // ═══ 雪碧图按需加载：只加载玩家选中的技能所需动画 ═══
         this.useSprite = true;
-        this.loadingProgress = 55;
+        this.loadingProgress = 45;
         const baseKeys = ['walk','jump','drop','float','death'];
         // bg/sz/fz/idle 不用雪碧图 — GPU 纹理采样开销远超独立 PNG
         const skillAnimMap = {
@@ -413,20 +413,37 @@ export class BattleScene {
             return tasks;
         }));
         this.loadingProgress = 85;
-        // 预加载所有音效和配音，避免首次播放的网络延迟
+        // 预加载当前对局需要的音效和配音
         const audioPreload = [];
         const sfxDir = '游戏资源/音频/技能音效';
         const voiceDir = '游戏资源/音频/人物配音/放技能';
-        for (const fn of ['walk','jump','drop','float','heal','death','buff','buffAttack','slash','speed','meleeSlash','meleeChop','hitReact','shield','poisonBlade','flameBlade','laser','thunder','giantSword','victory']) {
+        // 基础移动音效（必加载）
+        const baseSfx = ['walk','jump','drop','float','death','hitReact','shield','victory'];
+        // 玩家技能音效
+        const skillSfxMap = {
+            回血:['heal'],强化:['buff','buffAttack'],无敌之盾:['shield'],神速:['speed'],
+            隐身面具:[],冰冻:['slash'],淬毒刃:['poisonBlade','meleeSlash'],
+            烈焰斩:['flameBlade','meleeSlash'],激光:['laser','meleeSlash'],
+            震雷枪:['thunder','meleeSlash','meleeChop'],巨剑术:['giantSword'],
+            普攻:['meleeSlash','meleeChop'],
+        };
+        const neededSfx = new Set(baseSfx);
+        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
+            const sfx = skillSfxMap[s]; if (sfx) sfx.forEach(x => neededSfx.add(x));
+        }
+        for (const fn of neededSfx) {
             audioPreload.push(new Promise(r => {
                 const a = new Audio(`${sfxDir}/${fn}.mp3`);
                 a.preload = 'auto'; a.load();
                 a.oncanplaythrough = () => r();
                 a.onerror = () => r();
-                setTimeout(() => r(), 3000); // 3秒超时
+                setTimeout(() => r(), 3000);
             }));
         }
-        for (const fn of ['冰冻','回血','巨剑术','强化','淬毒刃','激光','烈焰斩','神速','隐身','震雷枪']) {
+        // 只预加载玩家拥有的技能配音
+        const neededVoice = new Set();
+        for (const s of [...this.skills1, ...this.skills2]) neededVoice.add(s);
+        for (const fn of neededVoice) {
             audioPreload.push(new Promise(r => {
                 const a = new Audio(`${voiceDir}/${fn}.mp3`);
                 a.preload = 'auto'; a.load();
@@ -1226,6 +1243,7 @@ export class BattleScene {
                         const pad3=n=>String(n).padStart(5,'0');
                         const img3=new Image();
                         img3.onload=()=>this.frameCache.set('vicFinal'+fn2,img3);
+                        img3.onerror=()=>{};
                         img3.src=`${this.victoryFrameDir}/frame_${pad3(fn2)}.png`;
                     }
                 }
