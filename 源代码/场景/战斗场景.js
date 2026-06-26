@@ -23,7 +23,6 @@ export class BattleScene {
         this._gameTime = 0;
         this._lastGoodFrame = {};
         this.loadingProgress = 0;
-        this._vicLoadIdx = 31; // 1-30已预载，从31开始后台补
         this._beamKey = '';
         this._beamCvs = document.createElement('canvas');
         this._beamCvs.width = 1920; this._beamCvs.height = 1080; // 尺寸固定
@@ -346,14 +345,7 @@ export class BattleScene {
         const iconTasks = allSkills.map(s => L('sk_'+s, `游戏资源/图像/UI/${s}1_透明.png`));
         await Promise.all(iconTasks);
         this.loadingProgress = 25;
-        // 预加载胜利结算图
-        await Promise.all([
-            L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.png'),
-            L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
-            L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
-        ]);
-        this.loadingProgress = 35;
-        // ═══ 雪碧图按需加载：只加载玩家选中的技能所需动画 ═══
+        // ═══ 雪碧图按需加载 ═══
         this.useSprite = true;
         const baseKeys = ['walk','jump','drop','float','death'];
         // bg/sz/fz/idle 不用雪碧图 — GPU 纹理采样开销远超独立 PNG
@@ -376,12 +368,12 @@ export class BattleScene {
             await this.sprite.load(k, `游戏资源/雪碧图/${k}.json`).catch(() => {});
         }
         this.loadingProgress = 55;
-        // 预热：场景动画前20帧
+        // 预热：场景动画前10帧
         const pad = n => String(n).padStart(5, '0');
         await Promise.all(['bg','sz','fz','idle'].flatMap(k => {
             const dir = this.animPaths[k];
             const tasks = [];
-            for (let n = 2; n <= 20; n++) {
+            for (let n = 2; n <= 10; n++) {
                 const ck = k + n;
                 if (!this.frameCache.has(ck)) {
                     tasks.push(new Promise(r => {
@@ -394,9 +386,9 @@ export class BattleScene {
             }
             return tasks;
         }));
-        // 结算动画前30帧（与场景帧并行，确保结算不空白）
+        // 结算动画前10帧（与场景帧并行）
         const vicPad = n => String(n).padStart(5,'0');
-        await Promise.all([...Array(30)].map((_,i) => {
+        await Promise.all([...Array(10)].map((_,i) => {
             const n = i+1, ck = 'vicFinal'+n;
             return new Promise(r => {
                 const img = new Image();
@@ -405,56 +397,10 @@ export class BattleScene {
                 img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.png`;
             });
         }));
-        this.loadingProgress = 70;
-        // 预加载当前对局需要的音效和配音
-        const audioPreload = [];
-        const sfxDir = '游戏资源/音频/技能音效';
-        const voiceDir = '游戏资源/音频/人物配音/放技能';
-        // 基础移动音效（必加载）
-        const baseSfx = ['walk','jump','drop','float','death','hitReact','shield','victory'];
-        // 玩家技能音效
-        const skillSfxMap = {
-            回血:['heal'],强化:['buff','buffAttack'],无敌之盾:['shield'],神速:['speed'],
-            隐身面具:[],冰冻:['slash'],淬毒刃:['poisonBlade','meleeSlash'],
-            烈焰斩:['flameBlade','meleeSlash'],激光:['laser','meleeSlash'],
-            震雷枪:['thunder','meleeSlash','meleeChop'],巨剑术:['giantSword'],
-            普攻:['meleeSlash','meleeChop'],
-        };
-        const neededSfx = new Set(baseSfx);
-        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
-            const sfx = skillSfxMap[s]; if (sfx) sfx.forEach(x => neededSfx.add(x));
-        }
-        for (const fn of neededSfx) {
-            audioPreload.push(new Promise(r => {
-                const a = new Audio(`${sfxDir}/${fn}.mp3`);
-                a.preload = 'auto'; a.load();
-                a.oncanplaythrough = () => r();
-                a.onerror = () => r();
-                setTimeout(() => r(), 3000);
-            }));
-        }
-        // 只预加载玩家拥有的技能配音
-        const neededVoice = new Set();
-        for (const s of [...this.skills1, ...this.skills2]) neededVoice.add(s);
-        for (const fn of neededVoice) {
-            audioPreload.push(new Promise(r => {
-                const a = new Audio(`${voiceDir}/${fn}.mp3`);
-                a.preload = 'auto'; a.load();
-                a.oncanplaythrough = () => r();
-                a.onerror = () => r();
-                setTimeout(() => r(), 3000);
-            }));
-        }
-        await Promise.all(audioPreload).catch(() => {});
-        this.loadingProgress = 85;
-        // GPU预热：强制创建buff/buffIdle的雪碧图描述符，避免首次绘制时GPU纹理上传卡顿
-        if(this.useSprite){
-            for(const k of ['buff','buffIdle']){
-                if(this.sprite.has(k)) this._getFrame(k, 1);
-            }
-        }
-        this.loadingProgress = 95;
+        this.loadingProgress = 80;
         this.ok = true;
+        // 后台异步加载：音效、配音、胜利结算图、冻结图（不阻塞游戏启动）
+        this._deferredLoad();
 
         // 初始化位置数据
         const V = (cx, cy) => ({ cx, cy, sx: cx+960, sy: cy+540 });
@@ -1473,19 +1419,6 @@ export class BattleScene {
         this._loadFrame('sz', ((fi%this.total)+1));
         this._loadFrame('fz', ((fi%this.total)+1));
         this._loadFrame('idle', ((fi%this.total)+1));
-        // 后台补结算动画剩余帧31-121
-        if(this._vicLoadIdx <= 121){
-            const vPad = n => String(n).padStart(5,'0');
-            for(let i=0;i<5 && this._vicLoadIdx<=121;i++,this._vicLoadIdx++){
-                const n = this._vicLoadIdx, ck = 'vicFinal'+n;
-                if(!this.frameCache.has(ck)){
-                    const img = new Image();
-                    img.onload = () => this.frameCache.set(ck, img);
-                    img.onerror = () => {};
-                    img.src = `${this.victoryFrameDir}/frame_${vPad(n)}.png`;
-                }
-            }
-        }
 
         // 血条插值 + 死亡检测
         for(const p of this.players){
@@ -2286,6 +2219,55 @@ export class BattleScene {
         ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);
         ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
         if(s)ctx.stroke();else ctx.fill();
+    }
+
+    /** 后台延迟加载：音效、配音、结算图、冻结图（不阻塞游戏启动） */
+    async _deferredLoad(){
+        const L = (k, u) => new Promise(r => {
+            const i = new Image(); i.onload = () => { this.im[k] = i; r(); };
+            i.onerror = () => r(); i.src = u;
+        });
+        // 结算图 + 冻结图
+        await Promise.all([
+            L('vic_第一局胜利','游戏资源/图像/UI/第一局胜利_透明.png'),
+            L('vic_第二局胜利','游戏资源/图像/UI/第二局胜利_透明.png'),
+            L('frozen','游戏资源/图像/人物/被冻住1_透明.png'),
+        ]);
+        // 音效 + 配音（分批，不抢渲染带宽）
+        const sfxDir = '游戏资源/音频/技能音效';
+        const voiceDir = '游戏资源/音频/人物配音/放技能';
+        const baseSfx = ['walk','jump','drop','float','death','hitReact','shield','victory'];
+        const skillSfxMap = {
+            回血:['heal'],强化:['buff','buffAttack'],无敌之盾:['shield'],神速:['speed'],
+            隐身面具:[],冰冻:['slash'],淬毒刃:['poisonBlade','meleeSlash'],
+            烈焰斩:['flameBlade','meleeSlash'],激光:['laser','meleeSlash'],
+            震雷枪:['thunder','meleeSlash','meleeChop'],巨剑术:['giantSword'],
+            普攻:['meleeSlash','meleeChop'],
+        };
+        const neededSfx = new Set(baseSfx);
+        for (const s of [...this.skills1, ...this.skills2, '回血', '普攻']) {
+            const sfx = skillSfxMap[s]; if (sfx) sfx.forEach(x => neededSfx.add(x));
+        }
+        const allAudio = [...neededSfx].map(fn => `${sfxDir}/${fn}.mp3`);
+        const neededVoice = new Set([...this.skills1, ...this.skills2]);
+        for (const fn of neededVoice) allAudio.push(`${voiceDir}/${fn}.mp3`);
+        // 用 fetch 预缓存到浏览器（比 new Audio 更轻量）
+        for (const url of allAudio) {
+            fetch(url).catch(() => {});
+            await new Promise(r => setTimeout(r, 50)); // 50ms间隔，不抢带宽
+        }
+        // 结算帧剩余（11-121）也在后台补齐
+        const vicPad = n => String(n).padStart(5,'0');
+        for (let n = 11; n <= 121; n++) {
+            const ck = 'vicFinal'+n;
+            if(!this.frameCache.has(ck)){
+                const img = new Image();
+                img.onload = () => this.frameCache.set(ck, img);
+                img.onerror = () => {};
+                img.src = `${this.victoryFrameDir}/frame_${vicPad(n)}.png`;
+            }
+            if(n%10===0) await new Promise(r => setTimeout(r, 100));
+        }
     }
 
     renderLoading(ctx){
