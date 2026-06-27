@@ -1,0 +1,53 @@
+name: 打包APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
+
+      - name: 准备 Capacitor 项目
+        run: |
+          mkdir apk && cd apk
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: 配置
+        run: |
+          cd apk
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.sunwanxin.knightduel",
+            "appName": "骑士对决",
+            "webDir": "www",
+            "bundledWebRuntime": false,
+            "server": {
+              "url": "https://sunwanxin-123-d9gx0fbcja1a46cc7-1410116051.tcloudbaseapp.com",
+              "cleartext": true
+            }
+          }
+          EOF
+          mkdir -p www && echo '<html></html>' > www/index.html
+
+      - name: 构建 APK
+        run: |
+          cd apk
+          echo "y" | npx cap add android
+          echo "android.overridePathCheck=true" >> android/gradle.properties
+          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+
+      - name: 上传到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: "骑士对决 APK (build ${{ github.run_number }})"
+          files: apk/android/app/build/outputs/apk/debug/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
